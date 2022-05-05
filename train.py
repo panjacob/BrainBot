@@ -76,6 +76,8 @@ for epoch in range(100):
     accuracy = []
     loses = []
     model.train()
+    accuracy = []
+    loses = []
     for inputs, labels, filenames in brainloader:
         inputs = torch.autograd.Variable(inputs.to(device, non_blocking=True))
         labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
@@ -92,6 +94,8 @@ for epoch in range(100):
 
     print('accuracy', sum(accuracy) / len(accuracy))
     print('loss', (sum(loses) / len(loses)).item())
+
+            # print('accuracy', accuracy_human(labels, outputs))
 
     if not epoch % 5:
         print("Testing")
