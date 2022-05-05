@@ -12,7 +12,7 @@
 1) pip freeze > requirements.txt
 
 
-###Dane:
+### Dane:
 
 Movement Imagery:
 https://physionet.org/content/eegmmidb/
