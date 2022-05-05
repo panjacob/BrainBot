@@ -48,34 +48,60 @@ def accuracyxd(output, target, batch_size, topk=(1,), ):
         return res
 
 
+def label_to_human_form(labels):
+    result = []
+    for x in labels:
+        for y in x:
+            result.append(int(y))
+    return result
+
+
+def accuracy_human(a, b):
+    result = 0
+    for x, y in zip(label_to_human_form(a), label_to_human_form(b)):
+        result += 1 if x == y else 0
+    return result / len(a)
+
+
+
+
 brainloader, testloader = loadData()
 device = torch.device("cpu")
 model = ECGNet()
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss()
+# xd = criterion([])
+
 optimalizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 model.to(device)
 # average_meter = AverageMeter()
-for epoch in range(2):
+for epoch in range(10):
     print('epoch', epoch)
     model.train()
+    accuracy = []
     for inputs, labels, filenames in brainloader:
         labels = torch.reshape(labels, (len(labels), 1, 1))
 
         with torch.set_grad_enabled(True):
             outputs = model(inputs.float())
-            loss = criterion(outputs, labels)
+            loss = criterion(labels.float(), outputs)
             loss.backward()
+            print(loss)
             optimalizer.step()
             optimalizer.zero_grad()
+
+            # print('accuracy', accuracy_human(labels, outputs))
 
     if not epoch % 5:
         model.eval()
         with torch.no_grad():
             for inputs, labels, filenames in testloader:
+                # print(len(labels))
                 labels = torch.reshape(labels, (len(labels), 1, 1))
-                outputs = model(inputs.float())
-                loss = criterion(outputs, labels)
-                accuracy = sum([1 for x, y in zip(labels, outputs) if x == y]) / len(inputs)
-
+                l1, l2 = labels
+                outputs = model(inputs.float()).float()
+                loss = criterion(labels.float(), outputs)
+                accuracy.append(accuracy_human(labels, outputs))
+                # print('accuracy', accuracy_human(labels, outputs))
                 # accuracy2 = accuracyxd(outputs, labels, len(inputs))
-                print(accuracy)
+            print('accuracy', sum(accuracy) / len(accuracy))
+
