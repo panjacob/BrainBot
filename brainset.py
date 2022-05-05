@@ -1,12 +1,13 @@
 import os
 import random
 import mne
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
 classes = {
-    1: "False",
-    2: 'True',
+    1: 0.0,
+    2: 1.0,
 }
 
 
@@ -37,8 +38,10 @@ class Brainset(Dataset):
             data = mne.io.read_raw_edf(file)
             raw_data = data.get_data()
             y = raw_data[:, :30000]
+            # y = np.full(10, 10).astype(np.double)
+            y2 = np.array(y).astype(np.float)
 
-            self.brain_set.append([y, classes[class_idx], filename])
+            self.brain_set.append([y2, classes[class_idx], filename])
 
         random.shuffle(self.brain_set)
         # self.brain_set.set_format("torch", columns=21)
@@ -57,7 +60,6 @@ def loadData():
     train_loader = DataLoader(brainset_train, batch_size=8, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
-
 
 # brainloader, testloader = loadData()
 # device = torch.device("cpu")
