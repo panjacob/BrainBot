@@ -9,7 +9,8 @@ info = data.info
 print(info)
 channels = data.ch_names
 
-x = raw_data[1, :]
+x = raw_data[2, :]
+print('len:', len(x))
 # S{numer_osoby}R{numer_zadania}_{numer_sygnalu_eeg(numer sondy?)-64_{nazwa_zadania}}
 title = "S001R01_1-64_Baseline, eyes open"
 plt.title(title)
