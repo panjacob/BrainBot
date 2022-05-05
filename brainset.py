@@ -59,10 +59,10 @@ def loadData():
     return train_loader, test_loader
 
 
-brainloader, testloader = loadData()
-device = torch.device("cpu")
-# Szkielet pętli treningowej!
-for batch in brainloader:
-    inputs = batch[0]
-    labels = batch[1]
-    filenames = batch[2]
+# brainloader, testloader = loadData()
+# device = torch.device("cpu")
+# # Szkielet pętli treningowej!
+# for batch in brainloader:
+#     inputs = batch[0]
+#     labels = batch[1]
+#     filenames = batch[2]

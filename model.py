@@ -35,10 +35,9 @@ class ECGNet(nn.Module):
             nn.Sigmoid()
         )
 
-
-def forward(self, x):
-    x = self.c1(x)
-    x = self.c2(x)
-    x = self.c3(x)
-    x = self.out(x)
-    return x
+    def forward(self, x):
+        x = self.c1(x)
+        x = self.c2(x)
+        x = self.c3(x)
+        x = self.out(x)
+        return x
