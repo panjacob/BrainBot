@@ -63,29 +63,26 @@ def accuracy_human(a, b):
     return result / len(a)
 
 
-
-
 brainloader, testloader = loadData()
 device = torch.device("cpu")
 model = ECGNet()
 criterion = nn.BCELoss()
-# xd = criterion([])
 
 optimalizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 model.to(device)
 # average_meter = AverageMeter()
-for epoch in range(10):
+for epoch in range(100):
     print('epoch', epoch)
     model.train()
     accuracy = []
+    loses = []
     for inputs, labels, filenames in brainloader:
         labels = torch.reshape(labels, (len(labels), 1, 1))
 
         with torch.set_grad_enabled(True):
             outputs = model(inputs.float())
-            loss = criterion(labels.float(), outputs)
+            loss = criterion(outputs, labels.float())
             loss.backward()
-            print(loss)
             optimalizer.step()
             optimalizer.zero_grad()
 
@@ -95,13 +92,13 @@ for epoch in range(10):
         model.eval()
         with torch.no_grad():
             for inputs, labels, filenames in testloader:
-                # print(len(labels))
                 labels = torch.reshape(labels, (len(labels), 1, 1))
                 l1, l2 = labels
-                outputs = model(inputs.float()).float()
-                loss = criterion(labels.float(), outputs)
+                outputs = model(inputs.float())
+                loss = criterion(outputs, labels.float())
+                loses.append(loss)
                 accuracy.append(accuracy_human(labels, outputs))
-                # print('accuracy', accuracy_human(labels, outputs))
-                # accuracy2 = accuracyxd(outputs, labels, len(inputs))
-            print('accuracy', sum(accuracy) / len(accuracy))
+            # print('accuracy', sum(accuracy) / len(accuracy))
 
+    print('loss', sum(loses) / len(loses))
+    loses = []
