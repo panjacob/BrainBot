@@ -12,19 +12,19 @@ class ECGNet(nn.Module):
 
     self.c1 = nn.Sequential(
         nn.Conv1d(self.channels, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(nn.dropout_p1),
+        nn.Dropout(self.dropout_p1),
         nn.ReLU()
     )
 
     self.c2 = nn.Sequential(
         nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(nn.dropout_p2),
+        nn.Dropout(self.dropout_p2),
         nn.ReLU()
     )
 
     self.c3 = nn.Sequential(
         nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(nn.dropout_p2),
+        nn.Dropout(self.dropout_p2),
         nn.ReLU()
     )
 
