@@ -2,10 +2,11 @@ import mne
 import os
 import matplotlib.pyplot as plt
 
-file = os.path.join('files', 'S001', 'S001R01.edf')
+file = os.path.join('files2', 'Subject00_2.edf')
 data = mne.io.read_raw_edf(file)
 raw_data = data.get_data()
 info = data.info
+print(info)
 channels = data.ch_names
 
 x = raw_data[1, :]
