@@ -1,7 +1,5 @@
 import os
 import random
-from pprint import pprint
-
 import mne
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -23,15 +21,15 @@ def select_train_files(size=4):
 
 class Brainset(Dataset):
 
-    def __init__(self, path, type):
+    def __init__(self, path, is_train_pretty):
         files = os.listdir(path)
         self.brain_set = []
-        self.type = type
+        self.is_train_pretty = type
 
         test_files = select_train_files(size=4)
         train_files = [x for x in files if x not in test_files]
 
-        files = train_files if self.type else test_files
+        files = train_files if self.is_train_pretty else test_files
 
         for index, filename in enumerate(files):
             class_idx = int(filename.split('_')[-1][0])
@@ -54,10 +52,11 @@ class Brainset(Dataset):
 
 def loadData():
     path = os.path.join('files2')
-    brainset = Brainset(path)
-    brainloader = DataLoader(brainset, batch_size=8, shuffle=True)
-    testloader = DataLoader(brainset, batch_size=2, shuffle=Talse)
-    return brainloader , testloader
+    brainset_train = Brainset(path, True)
+    brainset_test = Brainset(path, False)
+    train_loader = DataLoader(brainset_train, batch_size=8, shuffle=True)
+    test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
+    return train_loader, test_loader
 
 
 brainloader, testloader = loadData()
