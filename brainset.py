@@ -23,12 +23,15 @@ def select_train_files(size=4):
 
 class Brainset(Dataset):
 
-    def __init__(self, path):
+    def __init__(self, path, type):
         files = os.listdir(path)
         self.brain_set = []
+        self.type = type
 
         test_files = select_train_files(size=4)
         train_files = [x for x in files if x not in test_files]
+
+        files = train_files if self.type else test_files
 
         for index, filename in enumerate(files):
             class_idx = int(filename.split('_')[-1][0])
@@ -53,10 +56,11 @@ def loadData():
     path = os.path.join('files2')
     brainset = Brainset(path)
     brainloader = DataLoader(brainset, batch_size=8, shuffle=True)
-    return brainloader
+    testloader = DataLoader(brainset, batch_size=2, shuffle=Talse)
+    return brainloader , testloader
 
 
-brainloader = loadData()
+brainloader, testloader = loadData()
 device = torch.device("cpu")
 # Szkielet pętli treningowej!
 for batch in brainloader:
