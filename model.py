@@ -12,32 +12,33 @@ class ECGNet(nn.Module):
         self.dropout_p1 = 0.30
         self.dropout_p2 = 0.25
 
-    self.c1 = nn.Sequential(
-        nn.Conv1d(self.channels, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(self.dropout_p1),
-        nn.ReLU()
-    )
+        self.c1 = nn.Sequential(
+            nn.Conv1d(self.channels, self.hidden_size, kernel_size=(self.kernel,)),
+            nn.Dropout(self.dropout_p1),
+            nn.ReLU()
+        )
 
-    self.c2 = nn.Sequential(
-        nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(self.dropout_p2),
-        nn.ReLU()
-    )
+        self.c2 = nn.Sequential(
+            nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
+            nn.Dropout(self.dropout_p2),
+            nn.ReLU()
+        )
 
-    self.c3 = nn.Sequential(
-        nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
-        nn.Dropout(self.dropout_p2),
-        nn.ReLU()
-    )
+        self.c3 = nn.Sequential(
+            nn.Conv1d(self.hidden_size, self.hidden_size, kernel_size=(self.kernel,)),
+            nn.Dropout(self.dropout_p2),
+            nn.ReLU()
+        )
 
         self.out = nn.Sequential(
             nn.Linear(self.hidden_size, 1),
             nn.Sigmoid()
         )
 
-    def forward(self, x):
-        x = self.c1(x)
-        x = self.c2(x)
-        x = self.c3(x)
-        x = self.out(x)
-        return x
+
+def forward(self, x):
+    x = self.c1(x)
+    x = self.c2(x)
+    x = self.c3(x)
+    x = self.out(x)
+    return x
