@@ -10,3 +10,12 @@
 ### Aktualizacja requiremets:
 
 1) pip freeze > requirements.txt
+
+
+###Dane:
+
+Movement Imagery:
+https://physionet.org/content/eegmmidb/
+
+mental workload:
+https://physionet.org/content/eegmat/
