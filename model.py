@@ -1,10 +1,11 @@
 from torch.nn.modules.activation import Sigmoid
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 
 class ECGNet(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.channels = 21
         self.hidden_size = 32
@@ -35,9 +36,9 @@ class ECGNet(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, x):
+    def forward(self, x : Tensor) -> Tensor:
         x = self.c1(x)
         x = self.c2(x)
         x = self.c3(x)
         x = self.out(x)
-        return x
+        return x.flatten()

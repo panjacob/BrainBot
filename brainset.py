@@ -5,9 +5,10 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+
 classes = {
-    1: 0.0,
-    2: 1.0,
+    1: 0,
+    2: 1,
 }
 
 
@@ -35,13 +36,14 @@ class Brainset(Dataset):
         for index, filename in enumerate(files):
             class_idx = int(filename.split('_')[-1][0])
             file = os.path.join('files2', filename)
-            data = mne.io.read_raw_edf(file)
+            data = mne.io.read_raw_edf(file, verbose=False)
             raw_data = data.get_data()
-            y = raw_data[:, :30000]
+            y = raw_data[:, :30000].astype(np.float32)
+            label = np.float32(classes[class_idx])
             # y = np.full(10, 10).astype(np.double)
-            y2 = np.array(y).astype(np.float)
+            #y2 = np.array(y).astype(np.float)
 
-            self.brain_set.append([y2, classes[class_idx], filename])
+            self.brain_set.append([y, label, filename])
 
         random.shuffle(self.brain_set)
         # self.brain_set.set_format("torch", columns=21)

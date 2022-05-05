@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
-
+from torch.nn.utils import clip_grad_norm_
 from brainset import *
 from model import ECGNet
 
@@ -30,6 +30,20 @@ class AverageMeter:
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.dict)
 
+def label_to_human_form(labels):
+    result = []
+    for x in labels:
+        #for y in x:
+        result.append(int(x))
+    return result
+
+
+def accuracy_human(a, b):
+    result = 0
+    for x, y in zip(label_to_human_form(a), label_to_human_form(b)):
+        result += 1 if x == y else 0
+    return result / len(a)
+
 
 def accuracyxd(output, target, batch_size, topk=(1,), ):
     """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -47,35 +61,51 @@ def accuracyxd(output, target, batch_size, topk=(1,), ):
             res.append(correct_k.mul(100.0 / batch_size))
         return res
 
-
+torch.set_default_dtype(torch.float32)
 brainloader, testloader = loadData()
 device = torch.device("cpu")
 model = ECGNet()
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss()
 optimalizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 model.to(device)
+inputs, labels, filenames  = next(iter(brainloader))
 # average_meter = AverageMeter()
-for epoch in range(2):
+for epoch in range(100):
     print('epoch', epoch)
+
+    accuracy = []
+    loses = []
     model.train()
     for inputs, labels, filenames in brainloader:
-        labels = torch.reshape(labels, (len(labels), 1, 1))
+        inputs = torch.autograd.Variable(inputs.to(device, non_blocking=True))
+        labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
 
         with torch.set_grad_enabled(True):
-            outputs = model(inputs.float())
+            optimalizer.zero_grad()
+            outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
+            #clip_grad_norm_(model.parameters(), max_norm=1)
             optimalizer.step()
-            optimalizer.zero_grad()
+            accuracy.append(accuracy_human(labels, outputs))
+            loses.append(loss)
+
+    print('accuracy', sum(accuracy) / len(accuracy))
+    print('loss', (sum(loses) / len(loses)).item())
 
     if not epoch % 5:
+        print("Testing")
         model.eval()
+        accuracy = []
+        loses = []
         with torch.no_grad():
             for inputs, labels, filenames in testloader:
-                labels = torch.reshape(labels, (len(labels), 1, 1))
-                outputs = model(inputs.float())
+                #labels = torch.reshape(labels, (len(labels), 1, 1))
+                outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                accuracy = sum([1 for x, y in zip(labels, outputs) if x == y]) / len(inputs)
-
+                accuracy.append(accuracy_human(labels, outputs))
+                loses.append(loss)
                 # accuracy2 = accuracyxd(outputs, labels, len(inputs))
-                print(accuracy)
+                # print(accuracy)
+            print('test accuracy', sum(accuracy) / len(accuracy))
+            print('test loss', (sum(loses) / len(loses)).item())
