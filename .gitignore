@@ -1,2 +1,15 @@
+#This files are not in the github repo:
+#Pycharm Files
 .idea
-brainvenv
+#Virtual Environment
+*venv
+*env
+
+#Cache:
+__pycache__
+
+#Plot Data:
+plots
+
+#Put your data here:
+data/*
