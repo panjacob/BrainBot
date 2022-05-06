@@ -3,32 +3,9 @@ import torch
 from torch import nn
 from torch.nn.utils import clip_grad_norm_
 from brainset import *
-from model import ECGNet
+from model import *
 
-
-class AverageMeter:
-    """Computes and stores the average and current value"""
-
-    def init(self, name, fmt=':f'):
-        self.name = name
-        self.fmt = fmt
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    def str(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-        return fmtstr.format(**self.dict)
+single_batch_test = True
 
 def label_to_human_form(labels):
     result = []
@@ -45,40 +22,29 @@ def accuracy_human(a, b):
     return result / len(a)
 
 
-def accuracyxd(output, target, batch_size, topk=(1,), ):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
-    with torch.no_grad():  # disables recalculation of gradients
-        maxk = max(topk)
-        batchsize = target.size(0)
-
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.contiguous().view(1, -1).expand_as(pred))
-
-        res = []
-        for k in topk:
-            correct_k = correct[:k].contiguous().view(-1).float().sum(0, keepdim=True)
-            res.append(correct_k.mul(100.0 / batch_size))
-        return res
 
 torch.set_default_dtype(torch.float32)
 brainloader, testloader = loadData()
-device = torch.device("cpu")
-model = ECGNet()
+device = torch.device("cuda")
+model = FunnyNet()
 criterion = nn.BCELoss()
-optimalizer = torch.optim.Adam(model.parameters(), lr=3e-4)
+optimalizer = torch.optim.Adam(model.parameters(), lr=0.001)
 model.to(device)
-inputs, labels, filenames  = next(iter(brainloader))
-# average_meter = AverageMeter()
-for epoch in range(100):
-    print('epoch', epoch)
 
-    accuracy = []
-    loses = []
+if single_batch_test is True:
+    # Preform Single Batch Test
+    brainloader = [next(iter(brainloader))]
+    print("Single Batch Test Chosen")
+
+for epoch in range(1000):
+    if not epoch % 50:
+        print('epoch', epoch)
+
+    train_accuracy = []
+    train_loses = []
     model.train()
-    accuracy = []
-    loses = []
     for inputs, labels, filenames in brainloader:
+
         inputs = torch.autograd.Variable(inputs.to(device, non_blocking=True))
         labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
 
@@ -89,27 +55,26 @@ for epoch in range(100):
             loss.backward()
             #clip_grad_norm_(model.parameters(), max_norm=1)
             optimalizer.step()
-            accuracy.append(accuracy_human(labels, outputs))
-            loses.append(loss)
+            train_accuracy.append(accuracy_human(labels, outputs))
+            train_loses.append(loss)
 
-    print('accuracy', sum(accuracy) / len(accuracy))
-    print('loss', (sum(loses) / len(loses)).item())
+    if not epoch % 50:
+        print('accuracy', sum(train_accuracy) / len(train_accuracy))
+        print('loss', (sum(train_loses) / len(train_loses)).item())
+    model.eval()
 
-            # print('accuracy', accuracy_human(labels, outputs))
-
-    if not epoch % 5:
+    if not epoch % 200:
         print("Testing")
-        model.eval()
         accuracy = []
         loses = []
+        model.eval()
         with torch.no_grad():
             for inputs, labels, filenames in testloader:
-                #labels = torch.reshape(labels, (len(labels), 1, 1))
+                inputs = torch.autograd.Variable(inputs.to(device, non_blocking=True))
+                labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 accuracy.append(accuracy_human(labels, outputs))
                 loses.append(loss)
-                # accuracy2 = accuracyxd(outputs, labels, len(inputs))
-                # print(accuracy)
             print('test accuracy', sum(accuracy) / len(accuracy))
             print('test loss', (sum(loses) / len(loses)).item())

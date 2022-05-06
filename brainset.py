@@ -38,7 +38,8 @@ class Brainset(Dataset):
             file = os.path.join('files2', filename)
             data = mne.io.read_raw_edf(file, verbose=False)
             raw_data = data.get_data()
-            y = raw_data[:, :30000].astype(np.float32)
+            y = raw_data[:, :30477].astype(np.float32)
+            y = y.flatten()[:-17].reshape(800, 800)
             label = np.float32(classes[class_idx])
             # y = np.full(10, 10).astype(np.double)
             #y2 = np.array(y).astype(np.float)
@@ -55,11 +56,11 @@ class Brainset(Dataset):
         return self.brain_set[idx]
 
 
-def loadData():
+def loadData(single_batch_test=False):
     path = os.path.join('files2')
     brainset_train = Brainset(path, True)
     brainset_test = Brainset(path, False)
-    train_loader = DataLoader(brainset_train, batch_size=8, shuffle=True)
+    train_loader = DataLoader(brainset_train, batch_size=32, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
 
