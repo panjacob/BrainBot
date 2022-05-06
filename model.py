@@ -73,7 +73,9 @@ class FunnyNet(nn.Module):
 
 
     def forward(self, x : Tensor) -> Tensor:
-        x = x.unsqueeze_(1)  #add channel dim
+        x = torch.stack([_.flatten()[:-17].reshape(800, 800) for _ in x.unbind()]) #create squeres
+        x = x.unsqueeze_(1) #add channel dim
+        #y = y.flatten()[:-17].reshape(800, 800)
         x = F.relu(self.conv1(x))
         #x = F.relu(self.conv2(x))
         x = self.pool(x)
@@ -81,4 +83,50 @@ class FunnyNet(nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
+        return x
+
+
+class AlexNet(nn.Module):
+    def __init__(self, num_classes: int = 1, dropout: float = 0.5) -> None:
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 3, kernel_size=11, stride=4, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(64, 192, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(192, 384, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+        )
+        self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=dropout),
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, num_classes),
+            nn.Sigmoid()
+            #nn.Softmax(0) #normalize to [0,1]
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        px = 732 # imput data size
+        x = torch.stack([_.flatten()[:-abs((x.size(2) * x.size(1)) - (px*px))].reshape(px, px) for _ in x.unbind()])  # create squeres
+        x = x.unsqueeze_(1)  # add channel dim
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        if x.size(1) == 1: x = x.flatten() #remove channel dim
         return x

@@ -26,9 +26,9 @@ def accuracy_human(a, b):
 torch.set_default_dtype(torch.float32)
 brainloader, testloader = loadData()
 device = torch.device("cuda")
-model = FunnyNet()
-criterion = nn.BCELoss()
-optimalizer = torch.optim.Adam(model.parameters(), lr=0.001)
+model = AlexNet()
+criterion = nn.BCELoss() #binary cross entropy
+optimalizer = torch.optim.Adam(model.parameters(), lr=0.01)
 model.to(device)
 
 if single_batch_test is True:
@@ -37,8 +37,8 @@ if single_batch_test is True:
     print("Single Batch Test Chosen")
 
 for epoch in range(1000):
-    if not epoch % 50:
-        print('epoch', epoch)
+    #if not epoch % 50:
+    print('epoch', epoch)
 
     train_accuracy = []
     train_loses = []
@@ -52,18 +52,19 @@ for epoch in range(1000):
             optimalizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
+            #loss = 50 - abs(loss - 50)
             loss.backward()
             #clip_grad_norm_(model.parameters(), max_norm=1)
             optimalizer.step()
             train_accuracy.append(accuracy_human(labels, outputs))
             train_loses.append(loss)
 
-    if not epoch % 50:
-        print('accuracy', sum(train_accuracy) / len(train_accuracy))
-        print('loss', (sum(train_loses) / len(train_loses)).item())
+    #if not epoch % 50:
+    print('accuracy', sum(train_accuracy) / len(train_accuracy))
+    print('loss', (sum(train_loses) / len(train_loses)).item())
     model.eval()
 
-    if not epoch % 200:
+    if not epoch % 1:
         print("Testing")
         accuracy = []
         loses = []
