@@ -5,7 +5,7 @@ from torch.nn.utils import clip_grad_norm_
 from brainset import *
 from model import *
 
-single_batch_test = True
+single_batch_test = False
 
 def label_to_human_form(labels):
     result = []
@@ -28,10 +28,10 @@ brainloader, testloader = loadData()
 device = torch.device("cuda")
 model = AlexNet()
 criterion = nn.BCELoss() #binary cross entropy
-optimalizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimalizer = torch.optim.Adam(model.parameters(), lr=0.001)
 model.to(device)
 
-if single_batch_test is True:
+if single_batch_test is False:
     # Preform Single Batch Test
     brainloader = [next(iter(brainloader))]
     print("Single Batch Test Chosen")
@@ -52,7 +52,7 @@ for epoch in range(1000):
             optimalizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            #loss = 50 - abs(loss - 50)
+            #loss = 100 - 2*abs(loss - 50)
             loss.backward()
             #clip_grad_norm_(model.parameters(), max_norm=1)
             optimalizer.step()
@@ -64,7 +64,7 @@ for epoch in range(1000):
     print('loss', (sum(train_loses) / len(train_loses)).item())
     model.eval()
 
-    if not epoch % 1:
+    if not epoch % 10:
         print("Testing")
         accuracy = []
         loses = []

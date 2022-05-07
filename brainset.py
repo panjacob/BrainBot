@@ -14,7 +14,7 @@ classes = {
 
 
 def select_train_files(size=4):
-    files_idx = random.sample(range(0, 35), size)
+    files_idx = list(range(0,30)) #random.sample(range(0, 35), size)
     result = []
     for idx in files_idx:
         result.append(f"Subject{idx}_1.edf")
@@ -60,6 +60,6 @@ def loadData(single_batch_test=False):
     path = os.path.join(DATA_PATH)
     brainset_train = Brainset(path, True)
     brainset_test = Brainset(path, False)
-    train_loader = DataLoader(brainset_train, batch_size=32, shuffle=True)
+    train_loader = DataLoader(brainset_train, batch_size=1, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
