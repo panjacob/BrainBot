@@ -130,3 +130,78 @@ class AlexNet(nn.Module):
         x = self.classifier(x)
         if x.size(1) == 1: x = x.flatten() #remove channel dim
         return x
+
+
+class BinaryClassification(nn.Module):
+    def __init__(self):
+        super(BinaryClassification, self).__init__()  # Number of input features is 12.
+        self.layer_1 = nn.Linear(1024, 64)
+        self.layer_2 = nn.Linear(64, 64)
+        self.layer_out = nn.Linear(64, 1)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.1)
+        self.batchnorm1 = nn.BatchNorm1d(64)
+        self.batchnorm2 = nn.BatchNorm1d(64)
+
+    def forward(self, x):
+        si = 1024  # imput data size
+        x = torch.stack([_.flatten()[:-abs((x.size(2) * x.size(1)) - si)].reshape(si) for _ in x.unbind()])
+        x = x.unsqueeze_(1)  # add channel dim
+        x = self.relu(self.layer_1(x))
+        x = self.batchnorm1(x)
+        x = self.relu(self.layer_2(x))
+        x = self.batchnorm2(x)
+        x = self.dropout(x)
+        x = self.layer_out(x)
+
+        return x
+
+
+class OneDNet(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+        self.features = nn.Sequential(
+            nn.Conv1d(21,42, kernel_size=(3,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=3), # downsize 3 times
+
+            nn.Conv1d(42, 84, kernel_size=(5,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=5),  # downsize 5 times
+
+            nn.Conv1d(84, 100, kernel_size=(5,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=5),  # downsize 5 times
+        )
+
+        self.avgpool = nn.AdaptiveAvgPool1d(100)
+
+        self.classifier = nn.Sequential(
+            nn.Linear(100 * 100 , 1000),
+            nn.ReLU(inplace=True),
+            nn.Linear(1000, 500),
+            nn.ReLU(inplace=True),
+            nn.Linear(500, 100),
+            nn.ReLU(inplace=True),
+            nn.Linear(100, 10),
+            nn.ReLU(inplace=True),
+            nn.Linear(10, 1),
+            nn.Sigmoid()
+        )
+
+
+    def forward(self, x : Tensor) -> Tensor:
+        #Get proper imput size:
+        sc = 30000  # imput data size
+        cl = x.size(1)
+        x = torch.stack([ _.flatten()[:-abs((x.size(2) * x.size(1)) - (sc * x.size(1)))].reshape(cl, sc) for _ in x.unbind()])  # create squeres
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        if x.size(1) == 1: x = x.flatten()  # remove channel dim
+        return x
+

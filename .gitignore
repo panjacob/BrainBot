@@ -13,3 +13,6 @@ plots
 
 #Put your data here:
 data/*
+
+#Runs (Training Log):
+runs

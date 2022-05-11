@@ -60,6 +60,6 @@ def loadData(single_batch_test=False):
     path = os.path.join(DATA_PATH)
     brainset_train = Brainset(path, True)
     brainset_test = Brainset(path, False)
-    train_loader = DataLoader(brainset_train, batch_size=1, shuffle=True)
+    train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
