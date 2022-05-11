@@ -24,6 +24,9 @@ def select_train_files(size=4):
 
 
 class Brainset(Dataset):
+    y_length = 30477
+    split_data_flag = True
+    split_amount = 200
 
     def __init__(self, path, is_train_pretty):
         files = os.listdir(path)
@@ -40,12 +43,16 @@ class Brainset(Dataset):
             file = os.path.join(DATA_PATH, filename)
             data = mne.io.read_raw_edf(file, verbose=False)
             raw_data = data.get_data()
-            y = raw_data[:, :30477].astype(np.float32)
+            y = raw_data[:, :self.y_length].astype(np.float32)
             label = np.float32(classes[class_idx])
-            # y = np.full(10, 10).astype(np.double)
-            #y2 = np.array(y).astype(np.float)
 
-            self.brain_set.append([y, label, filename])
+            if self.split_data_flag is True:
+                y_ind = [i for i in range(self.split_amount,y.shape[1], self.split_amount)]
+                y_split = np.split(y,y_ind,axis=1)[:-1]
+                for ysx in y_split :
+                    self.brain_set.append([ysx, label, filename])
+            else:
+                self.brain_set.append([y, label, filename])
 
         sample_count = 30477 * len(self.brain_set)
         for channel in range(21):
@@ -81,3 +88,4 @@ def loadData(single_batch_test=False):
     train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
+
