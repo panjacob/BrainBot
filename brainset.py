@@ -1,6 +1,7 @@
 import os
 import random
 import mne
+import math
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -45,6 +46,23 @@ class Brainset(Dataset):
             #y2 = np.array(y).astype(np.float)
 
             self.brain_set.append([y, label, filename])
+
+        sample_count = 30477 * len(self.brain_set)
+        for channel in range(21):
+            tmp_sum = 0.0
+
+            for y, _, _ in self.brain_set:
+                tmp_sum += sum(y[channel])
+            mean = tmp_sum / sample_count
+
+            tmp_sum = 0.0
+
+            for y, _, _ in self.brain_set:
+                tmp_sum += sum([(sample_y_val - mean)**2 for sample_y_val in y[channel]])
+            std = math.sqrt(tmp_sum / sample_count)
+
+            for i, (y, _, _) in enumerate(self.brain_set):
+                self.brain_set[i][0][channel] = [(old_val - mean) / std for old_val in y[channel]]
 
         random.shuffle(self.brain_set)
         # self.brain_set.set_format("torch", columns=21)
