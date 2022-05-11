@@ -31,9 +31,9 @@ def main():
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = loadData()
     device = torch.device("cuda")
-    model = OneDNet()
+    model = OneDNetScaled()
     criterion = nn.BCELoss() #binary cross entropy
-    optimalizer = torch.optim.Adam(model.parameters(), lr=0.005)
+    optimalizer = torch.optim.Adam(model.parameters(), lr=0.00001)
     model.to(device)
 
     if single_batch_test is True:
