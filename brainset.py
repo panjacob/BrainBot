@@ -54,7 +54,7 @@ class Brainset(Dataset):
             else:
                 self.brain_set.append([y, label, filename])
 
-        sample_count = 30477 * len(self.brain_set)
+        sample_count = self.split_amount * len(self.brain_set)
         for channel in range(21):
             tmp_sum = 0.0
 
