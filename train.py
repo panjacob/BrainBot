@@ -41,7 +41,7 @@ def main():
         brainloader = [next(iter(brainloader))]
         print("Single Batch Test Chosen")
 
-    for epoch in range(1000):
+    for epoch in range(1001):
         #if not epoch % 50:
         print('epoch', epoch)
 
