@@ -9,48 +9,50 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 import pywt
 
-# def EEG_to_dwt(data):
-#     c_allchannels = []
-#     for channel in data:
-#         coeffs = pywt.dwt(channel, 'db1')
-#         cA1, cD1 = coeffs
-#         c_allchannels.append(cA1)
-#         c_allchannels.append(cD1)
-#     return c_allchannels
+def EEG_to_dwt(data):
+    c_allchannels = []
+    for channel in data:
+        coeffs = pywt.dwt(channel, 'db1')
+        cA1, cD1 = coeffs
+        for element in cA1:
+            c_allchannels.append(element)
+        for element in cD1:
+            c_allchannels.append(element)
+    #print(c_allchannels)
+    return c_allchannels
 
 
 
-DATA_PATH = "data/mentalload"
+DATA_PATH = "data/mentalload/raw"
 
 path = os.path.join(DATA_PATH)
-train = Brainset(path, True).brain_set
-test = Brainset(path, False).brain_set
-
-# brainset_dict = {}
-# brainset_dict.update('data_train': brainset_train.brain_set[])
+train = Brainset(path, True, pickled=True).brain_set
+test = Brainset(path, False, pickled=True).brain_set
 
 data_test = [list[0] for list in test]
 data_train = [list[0] for list in train]
 
-label_test = [list[0] for list in test]
-label_train = [list[0] for list in train]
+label_test = [list[1] for list in test]
+label_train = [list[1] for list in train]
 
-# data_transformed = np.zeros((np.shape(data_train)[0],21*2))
-# print(data_transformed[1])
+data_train_transformed = []
+data_test_transformed = []
 
-print(data_train[0])
+for index, sample in enumerate(data_train):
+    data_train_transformed.append([element for element in EEG_to_dwt(sample)])
+for index, sample in enumerate(data_test):
+    data_test_transformed.append([element for element in EEG_to_dwt(sample)])
 
-# for index, sample in enumerate(data_train):
-#     data_transformed[index, :] = EEG_to_dwt(sample)
+lda = LinearDiscriminantAnalysis()
+lda.fit(data_train_transformed, label_train)
+data_train_reduced = lda.transform(data_train_transformed)
 
-# print(data_transformed)
+lda.fit(data_test_transformed, label_train)
+data_test_reduced = lda.transform(data_test_transformed)
 
-#lda = LinearDiscriminantAnalysis(n_components=21)
-#lda.fit(data_train, label_train)
+clf = svm.SVC(kernel= 'rbf')
+clf.fit(data_train_reduced, label_train)
+label_pred = clf.predict(data_test_reduced)
 
-# clf = svm.SVC(kernel= 'rbf')
-#clf.fit(data_train, label_train)
-#label_pred = clf.predict(data_test)
-
-#print("Miara accuracy:",metrics.accuracy_score(label_test, label_pred))
+print("Miara accuracy:",metrics.accuracy_score(label_test, label_pred))
 #y_score = clf.decision_function(X_test)
