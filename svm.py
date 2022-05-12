@@ -1,4 +1,4 @@
-from pyrsistent import b
+
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
