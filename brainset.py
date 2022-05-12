@@ -10,9 +10,12 @@ import numpy as np
 import pickle
 from torch.utils.data import Dataset, DataLoader
 
-DATA_PATH = "data/mentalload"
-PICKLE_PATH_TRAIN = DATA_PATH + "/train.pickle"
-PICKLE_PATH_TEST = DATA_PATH + "/test.pickle"
+DIR_PATH = "data/mentalload"
+DATA_PATH = DIR_PATH + "/raw"
+PICKLE_PATH_TRAIN = DIR_PATH + "/train.pickle"
+PICKLE_PATH_TEST = DIR_PATH + "/test.pickle"
+
+DATA_PICKLED =  True # If selected will pull data form pickle files
 
 classes = {
     1: 0,
@@ -24,8 +27,9 @@ def select_train_files(size=4):
     files_idx = list(range(0,30)) #random.sample(range(0, 35), size)
     result = []
     for idx in files_idx:
-        result.append(f"Subject{idx}_1.edf")
-        result.append(f"Subject{idx}_2.edf")
+        az = "0" if idx < 10 else "" #additional zero to print numbers like this: 00 01 09 and 10 22 34 etc
+        result.append("Subject"+az+str(idx)+"_1.edf")
+        result.append("Subject"+az+str(idx)+"_2.edf")
     return result
 
 
@@ -87,16 +91,16 @@ class Brainset(Dataset):
             #Save to pickled files for later use:
             with open(pickle_path, "wb") as pickle_file:
                 pickle.dump(self.brain_set, pickle_file)
-
-        # When Data was normalized and saved to pickled files
-        else:
-            with open(pickle_path, "rb") as pickle_file:
-                self.brain_set = pickle.load(pickle_file)
                 if is_train_pretty:
                     print("Train ",end ="")
                 else:
                     print("Test ",end ="")
                 print("dataset normalized and saved")
+
+        # When Data was normalized and saved to pickled files
+        else:
+            with open(pickle_path, "rb") as pickle_file:
+                self.brain_set = pickle.load(pickle_file)
 
         # Mix up the data data
         random.shuffle(self.brain_set)
@@ -128,8 +132,8 @@ class Brainset(Dataset):
 
 def loadData(single_batch_test=False):
     path = os.path.join(DATA_PATH)
-    brainset_train = Brainset(path, True, True)
-    brainset_test = Brainset(path, False, True)
+    brainset_train = Brainset(path, is_train_pretty = True, pickled = DATA_PICKLED)
+    brainset_test = Brainset(path, is_train_pretty = False, pickled = DATA_PICKLED)
     train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
