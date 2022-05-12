@@ -40,7 +40,7 @@ class Brainset(Dataset):
     """
     #Parameters:
     y_length = 30477  #initial signal cut size
-    split_data_flag = True  #split data to smaller batches
+    split_data_flag = False  #split data to smaller batches
     split_amount = 200  # size of the smaller batch
 
     def __init__(self, path, is_train_pretty, pickled=False):
@@ -137,4 +137,3 @@ def loadData(single_batch_test=False):
     train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
     return train_loader, test_loader
-
