@@ -1,4 +1,7 @@
-from torch.nn.modules.activation import Sigmoid
+"""
+Here are some Models in no particular order.
+Workig so far -> OneDNetScaled
+"""
 import torch
 import torch.nn as nn
 from torch import Tensor

@@ -1,15 +1,16 @@
-import numpy as np
-import torch
-from torch import nn
-from torch.nn.utils import clip_grad_norm_
+"""
+This is script design to create training experiment
+Data is loaded from brainset.py and model is defined in model.pl
+Tensor board usege tutorial : https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
+"""
+
 from brainset import *
 from model import *
-from sklearn import svm
 from torch.utils.tensorboard import SummaryWriter
-#tensor board usege tutorial : https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
 
 
 single_batch_test = False
+
 
 def label_to_human_form(labels):
     result = []

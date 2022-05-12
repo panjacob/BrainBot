@@ -1,3 +1,7 @@
+"""
+    This is script dedicated to visualize data
+"""
+
 import mne
 import os
 import matplotlib.pyplot as plt

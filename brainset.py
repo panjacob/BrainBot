@@ -1,10 +1,13 @@
+"""
+This is a script with Dataset class
+and loading data function
+"""
 import os
 import random
 import mne
 import math
 import numpy as np
 import pickle
-import torch
 from torch.utils.data import Dataset, DataLoader
 
 DATA_PATH = "data/mentalload"
