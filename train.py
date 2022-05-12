@@ -30,7 +30,7 @@ def main():
     writer = SummaryWriter()
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = loadData()
-    device = torch.device("cuda")
+    device = torch.device("cpu")
     model = OneDNet()
     criterion = nn.BCELoss() #binary cross entropy
     optimalizer = torch.optim.Adam(model.parameters(), lr=0.005)
