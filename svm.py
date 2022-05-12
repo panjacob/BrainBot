@@ -43,16 +43,18 @@ for index, sample in enumerate(data_train):
 for index, sample in enumerate(data_test):
     data_test_transformed.append([element for element in EEG_to_dwt(sample)])
 
-lda = LinearDiscriminantAnalysis()
-lda.fit(data_train_transformed, label_train)
-data_train_reduced = lda.transform(data_train_transformed)
 
-lda.fit(data_test_transformed, label_train)
-data_test_reduced = lda.transform(data_test_transformed)
+# lda = LinearDiscriminantAnalysis()
+# lda.fit(data_train_transformed, label_train)
+# label_pred = lda.predict(data_test_transformed)
+# data_train_reduced = lda.transform(data_train_transformed)
+
+# lda.fit(data_test_transformed, label_test)
+# data_test_reduced = lda.transform(data_test_transformed)
 
 clf = svm.SVC(kernel= 'rbf')
-clf.fit(data_train_reduced, label_train)
-label_pred = clf.predict(data_test_reduced)
+clf.fit(data_train_transformed, label_train)
+label_pred = clf.predict(data_test_transformed)
 
 print("Miara accuracy:",metrics.accuracy_score(label_test, label_pred))
 #y_score = clf.decision_function(X_test)
