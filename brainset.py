@@ -30,36 +30,51 @@ def select_train_files(size=4):
 
 
 class Brainset(Dataset):
-    y_length = 30477
-    split_data_flag = True
-    split_amount = 200
+    """
+        This is dataset class, designed to load EEG signal data from edf files (or pickled files)
+        and create usable with pytorch - dataset
+    """
+    #Parameters:
+    y_length = 30477  #initial signal cut size
+    split_data_flag = True  #split data to smaller batches
+    split_amount = 200  # size of the smaller batch
 
     def __init__(self, path, is_train_pretty, pickled=False):
+        #Data will be in this list:
+        self.brain_set = []
+
+        #Define if this is train or test dataset:
         if is_train_pretty:
             pickle_path = PICKLE_PATH_TRAIN
         else:
             pickle_path = PICKLE_PATH_TEST
 
+        #If data was not normalized and saved before:
         if not pickled:
+            #Load data from source (edf files)
             files = os.listdir(path)
             files = filter(lambda x: x.endswith(".edf"), files)
-            self.brain_set = []
-            self.is_train_pretty = type
-
+            #Split files to test and train files:
             test_files = select_train_files(size=4)
             train_files = [x for x in files if x not in test_files]
+            #Set dataset files (either test or train)
+            files = train_files if is_train_pretty else test_files
 
-            files = train_files if self.is_train_pretty else test_files
-
+            #Get data signals form files:
             for index, filename in enumerate(files):
-                class_idx = int(filename.split('_')[-1][0])
+                #Extract labels:
+                class_idx = int(filename.split('_')[-1][0])   # labels are saved inside file_name at the end after "_"
+                label = np.float32(classes[class_idx])  # labels are shifted 0,1 <- 1,2 in files
+                # Extract data:
                 file = os.path.join(DATA_PATH, filename)
                 data = mne.io.read_raw_edf(file, verbose=False)
                 raw_data = data.get_data()
+                #Cut data to unified size:
                 y = raw_data[:, :self.y_length].astype(np.float32)
-                label = np.float32(classes[class_idx])
 
+                #Check if there is a need to cut signals:
                 if self.split_data_flag is True:
+                    # Cut signals into small signals (to get more data and to fit it into neural net input):
                     y_ind = [i for i in range(self.split_amount,y.shape[1], self.split_amount)]
                     y_split = np.split(y,y_ind,axis=1)[:-1]
                     for ysx in y_split :
@@ -67,31 +82,42 @@ class Brainset(Dataset):
                 else:
                     self.brain_set.append([y, label, filename])
 
-            sample_count = self.split_amount * len(self.brain_set)
-            for channel in range(21):
-                tmp_sum = 0.0
-
-                for y, _, _ in self.brain_set:
-                    tmp_sum += sum(y[channel])
-                mean = tmp_sum / sample_count
-
-                tmp_sum = 0.0
-
-                for y, _, _ in self.brain_set:
-                    tmp_sum += sum([(sample_y_val - mean)**2 for sample_y_val in y[channel]])
-                std = math.sqrt(tmp_sum / sample_count)
-
-                for i, (y, _, _) in enumerate(self.brain_set):
-                    self.brain_set[i][0][channel] = [(old_val - mean) / std for old_val in y[channel]]
-
+            #Normalize data:
+            self.__normalize()
+            #Save to pickled files for later use:
             with open(pickle_path, "wb") as pickle_file:
                 pickle.dump(self.brain_set, pickle_file)
+
+        # When Data was normalized and saved to pickled files
         else:
             with open(pickle_path, "rb") as pickle_file:
                 self.brain_set = pickle.load(pickle_file)
+                if is_train_pretty:
+                    print("Train ",end ="")
+                else:
+                    print("Test ",end ="")
+                print("dataset normalized and saved")
 
+        # Mix up the data data
         random.shuffle(self.brain_set)
-        # self.brain_set.set_format("torch", columns=21)
+
+    def __normalize(self):
+        # Data per channel normalisation:
+        sample_count = self.split_amount * len(self.brain_set)
+        for channel in range(21):
+            tmp_sum = 0.0
+
+            for y, _, _ in self.brain_set:
+                tmp_sum += sum(y[channel])
+            mean = tmp_sum / sample_count
+            tmp_sum = 0.0
+
+            for y, _, _ in self.brain_set:
+                tmp_sum += sum([(sample_y_val - mean) ** 2 for sample_y_val in y[channel]])
+            std = math.sqrt(tmp_sum / sample_count)
+
+            for i, (y, _, _) in enumerate(self.brain_set):
+                self.brain_set[i][0][channel] = [(old_val - mean) / std for old_val in y[channel]]
 
     def __len__(self):
         return len(self.brain_set)
