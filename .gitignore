@@ -10,6 +10,7 @@ __pycache__
 
 #Plot Data:
 plots
+logs
 
 #Put your data here:
 data/*

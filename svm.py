@@ -9,14 +9,14 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 import pywt
 
-def EEG_to_dwt(data):
-    c_allchannels = []
-    for channel in data:
-        coeffs = pywt.dwt(channel, 'db1')
-        cA1, cD1 = coeffs
-        c_allchannels.append(cA1)
-        c_allchannels.append(cD1)
-    return c_allchannels
+# def EEG_to_dwt(data):
+#     c_allchannels = []
+#     for channel in data:
+#         coeffs = pywt.dwt(channel, 'db1')
+#         cA1, cD1 = coeffs
+#         c_allchannels.append(cA1)
+#         c_allchannels.append(cD1)
+#     return c_allchannels
 
 
 
@@ -35,18 +35,15 @@ data_train = [list[0] for list in train]
 label_test = [list[0] for list in test]
 label_train = [list[0] for list in train]
 
-data_transformed = np.zeros((np.shape(data_train)[0],21*2))
-print(data_transformed[1])
-i = 0
-for sample in data_train:
-    data_transformed[i, :] = EEG_to_dwt(sample)
-    i = i + 1
+# data_transformed = np.zeros((np.shape(data_train)[0],21*2))
+# print(data_transformed[1])
 
-print(data_transformed)
-coeffs = pywt.dwt(data_train[0][1], 'db1')
-cA2, cD2 = coeffs
-print(np.size(cA2))
-print(np.size(cD2))
+print(data_train[0])
+
+# for index, sample in enumerate(data_train):
+#     data_transformed[index, :] = EEG_to_dwt(sample)
+
+# print(data_transformed)
 
 #lda = LinearDiscriminantAnalysis(n_components=21)
 #lda.fit(data_train, label_train)

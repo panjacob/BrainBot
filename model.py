@@ -1,4 +1,7 @@
-from torch.nn.modules.activation import Sigmoid
+"""
+Here are some Models in no particular order.
+Workig so far -> OneDNetScaled
+"""
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -205,3 +208,46 @@ class OneDNet(nn.Module):
         if x.size(1) == 1: x = x.flatten()  # remove channel dim
         return x
 
+
+class OneDNetScaled(nn.Module):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv1d(21,42, kernel_size=(3,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=2), # downsize 2 times
+
+            nn.Conv1d(42, 84, kernel_size=(3,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=2),  # downsize 5 times
+
+            nn.Conv1d(84, 100, kernel_size=(3,)),
+            nn.ReLU(inplace=True),
+            nn.MaxPool1d(kernel_size=5),  # downsize 5 times
+        )
+
+        self.avgpool = nn.AdaptiveAvgPool1d(10)
+
+        self.classifier = nn.Sequential(
+            nn.Linear(100 * 10 , 500),
+            nn.ReLU(inplace=True),
+            nn.Linear(500, 50),
+            nn.ReLU(inplace=True),
+            nn.Linear(50, 1),
+            nn.Sigmoid()
+        )
+
+
+    def forward(self, x : Tensor) -> Tensor:
+        #Get proper imput size:
+        sc = 200  # imput data size
+        cl = x.size(1)
+        if x.size(2) != sc:
+            x = torch.stack([ _.flatten()[:-abs((x.size(2) * x.size(1)) - (sc * x.size(1)))].reshape(cl, sc) for _ in x.unbind()])  # create squeres
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        if x.size(1) == 1: x = x.flatten()  # remove channel dim
+        return x
