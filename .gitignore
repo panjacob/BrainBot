@@ -1,19 +1,20 @@
 #This files are not in the github repo:
 #Pycharm Files
-.idea
+*.idea
 #Virtual Environment
 *venv
 *env
 
 #Cache:
-__pycache__
+*__pycache__
 
 #Plot Data:
-plots
-logs
+*plots
+*logs
 
+#BrainStudy:
 #Put your data here:
-data/*
+BrainStudy/data/*
 
 #Runs (Training Log):
-runs
+BrainStudy/runs*
