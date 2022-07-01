@@ -2,6 +2,7 @@ import mne
 import os
 import matplotlib.pyplot as plt
 
+
 file = os.path.join('data/mentalload/raw', 'Subject01_2.edf')
 data = mne.io.read_raw_edf(file)
 raw_data = data.get_data()

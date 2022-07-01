@@ -1,25 +1,24 @@
 """
-This is script design to create training experiment
-Data is loaded from brainset.py and model is defined in model.pl
-Tensor board usege tutorial : https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
+The neural network's training.
+Tensorboard tutorial: https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
 """
 
 from brainset import *
 from model import *
 from torch.utils.tensorboard import SummaryWriter
 
-
 single_batch_test = False
 
 
+# TODO: Comment on this function
 def label_to_human_form(labels):
     result = []
     for x in labels:
-        #for y in x:
         result.append(int(x))
     return result
 
 
+# TODO: Comment on this function
 def accuracy_human(a, b):
     result = 0
     for x, y in zip(label_to_human_form(a), label_to_human_form(b)):
@@ -30,10 +29,10 @@ def accuracy_human(a, b):
 def main():
     writer = SummaryWriter()
     torch.set_default_dtype(torch.float32)
-    brainloader, testloader = loadData()
+    brainloader, testloader = load_data()
     device = torch.device("cuda")
     model = OneDNetScaled()
-    criterion = nn.BCELoss() #binary cross entropy
+    criterion = nn.BCELoss()  # binary cross entropy
     optimalizer = torch.optim.Adam(model.parameters(), lr=0.00001)
     model.to(device)
 
@@ -43,14 +42,13 @@ def main():
         print("Single Batch Test Chosen")
 
     for epoch in range(1001):
-        #if not epoch % 50:
+        # if not epoch % 50:
         print('epoch', epoch)
 
         train_accuracy = []
         train_loses = []
         model.train()
         for inputs, labels, filenames in brainloader:
-
             inputs = torch.autograd.Variable(inputs.to(device, non_blocking=True))
             labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
 
@@ -58,19 +56,17 @@ def main():
                 optimalizer.zero_grad()
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                #loss = 100 - 2*abs(loss - 50)
+                # loss = 100 - 2*abs(loss - 50)
                 writer.add_scalar("Loss/train", loss, epoch)
                 loss.backward()
-                #clip_grad_norm_(model.parameters(), max_norm=1)
+                # clip_grad_norm_(model.parameters(), max_norm=1)
                 optimalizer.step()
                 acc = accuracy_human(labels, outputs)
                 train_accuracy.append(acc)
                 writer.add_scalar("Accuracy/train", acc, epoch)
                 train_loses.append(loss)
 
-
-
-        #if not epoch % 50:
+        # if not epoch % 50:
         print('accuracy', sum(train_accuracy) / len(train_accuracy))
         print('loss', (sum(train_loses) / len(train_loses)).item())
         model.eval()
@@ -96,7 +92,6 @@ def main():
 
     writer.flush()
     writer.close()
-
 
 
 if __name__ == "__main__":
