@@ -1,9 +1,8 @@
 const box = document.getElementById('box')
 const car = document.getElementById('car')
 
-// values from -100 to 100
+// Od -100 do 100
 const carSetPosition = (args) => {
-    console.log(args)
     const {x, y} = args
 
     const middleX = window.innerWidth / 2
@@ -25,25 +24,28 @@ const createStripe = (x, y) => {
     return stripe
 }
 
-const roadMove = (speed, forward = true) => {
+const roadInit = () => {
     const stripeYs = [0, 20, 40, 60, 80, 100]
-    const stripes = stripeYs.map(y => createStripe(47, y))
-
-    setInterval(() => {
-        stripes.map(stripe => {
-            const currentTop = parseInt(stripe.style.top.slice(0, -1))
-            // Tutaj tak na szybko niedokładnie policzone
-            if (forward) {
-                if (currentTop >= 100) stripe.style.top = -20 + '%'
-                else stripe.style.top = currentTop + 1 + '%'
-            } else {
-                if (currentTop < -20) stripe.style.top = 100 + '%'
-                else stripe.style.top = currentTop - 1 + '%'
-            }
-        })
-    }, speed);
-
+    stripes = stripeYs.map(y => createStripe(47, y))
 }
+
+var forward = true
+var speed = 25
+var stripes = []
+
+setInterval(() => {
+    stripes.map(stripe => {
+        const currentTop = parseInt(stripe.style.top.slice(0, -1))
+        // Tutaj tak na szybko niedokładnie policzone
+        if (forward) {
+            if (currentTop >= 100) stripe.style.top = -20 + '%'
+            else stripe.style.top = currentTop + 1 + '%'
+        } else {
+            if (currentTop < -20) stripe.style.top = 100 + '%'
+            else stripe.style.top = currentTop - 1 + '%'
+        }
+    })
+}, speed);
 
 
 const moveCar = (left) => {
@@ -51,11 +53,25 @@ const moveCar = (left) => {
     else carSetPosition({'x': 70, 'y': 50})
 }
 
-const readAPI = () => {
-    const left = true
-    const forward = true
-    moveCar(left)
-    roadMove(25, forward)
+
+function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
 }
+
+
+const readAPI = async () => {
+    roadInit()
+    const socket = new WebSocket('ws://localhost:5000' + '/echo');
+    await delay(2000)
+    socket.send("Clinet says hello");
+
+    socket.addEventListener('message', data => {
+        const commands = JSON.parse(data.data)
+        console.log(commands)
+        forward = commands.forward
+        moveCar(commands.left)
+    });
+}
+
 
 readAPI()
