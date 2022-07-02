@@ -16,7 +16,7 @@ DATA_PATH = DIR_PATH + "/raw"
 PICKLE_PATH_TRAIN = DIR_PATH + "/train.pickle"
 PICKLE_PATH_TEST = DIR_PATH + "/test.pickle"
 
-DATA_PICKLED = True  # Data from previously pickled files
+DATA_PICKLED = False  # Data from previously pickled files
 
 CLASSES = {
     1: 0,
@@ -48,8 +48,9 @@ class Brainset(Dataset):
         Dataset to load EEG signal data from edf files (or pickled files).
     """
     SIGNAL_LENGTH = 30477
-    SPLIT_DATA = False
+    SPLIT_DATA = True
     SPLIT_LENGTH = 200
+    SPLIT_PADING = 5
 
     def __init__(self, path, is_trainset, load_pickled=False):
         # List containig the data:
@@ -83,14 +84,22 @@ class Brainset(Dataset):
                 y = raw_data[:, :self.SIGNAL_LENGTH].astype(np.float32)
 
                 # Check if there is a need to cut signals:
-                if self.SPLIT_DATA is True:
-                    # Cut signals into small signals (to get more data and to fit it into neural net input):
-                    y_ind = [i for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_LENGTH)]
-                    y_split = np.split(y, y_ind, axis=1)[:-1]
-                    for ysx in y_split:
-                        self.brain_set.append([ysx, label, filename])
-                else:
-                    self.brain_set.append([y, label, filename])
+                # if self.SPLIT_DATA is True:
+
+                # Cut signals into small signals (to get more data and to fit it into neural net input):
+                #
+                y_split = []
+                for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_PADING):
+                    y_sample = y[:,i-self.SPLIT_LENGTH:i]
+                    y_split.append(y_sample)
+                #y_split = np.array(y_split,np.float32)
+                #y_ind = [i for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_LENGTH)]
+                #y_split = np.split(y, y_ind, axis=1)[:-1]
+                for ysx in y_split:
+                    self.brain_set.append([ysx, label, filename])
+
+                #else:
+                #    self.brain_set.append([y, label, filename])
 
             # Normalize data:
             self.__normalize()
