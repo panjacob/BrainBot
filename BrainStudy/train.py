@@ -7,9 +7,10 @@ from brainset import *
 from model import *
 from torch.utils.tensorboard import SummaryWriter
 
-single_batch_test = False
-
-
+single_batch_test = True
+save_model = True
+save_dir_path = "models"
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 # TODO: Comment on this function
 def label_to_human_form(labels):
     result = []
@@ -41,9 +42,8 @@ def main():
         brainloader = [next(iter(brainloader))]
         print("Single Batch Test Chosen")
 
-    for epoch in range(1001):
-        # if not epoch % 50:
-        print('epoch', epoch)
+    for epoch in range(1000):
+        print('epoch', epoch+1)
 
         train_accuracy = []
         train_loses = []
@@ -66,12 +66,11 @@ def main():
                 writer.add_scalar("Accuracy/train", acc, epoch)
                 train_loses.append(loss)
 
-        # if not epoch % 50:
         print('accuracy', sum(train_accuracy) / len(train_accuracy))
         print('loss', (sum(train_loses) / len(train_loses)).item())
-        model.eval()
 
-        if not epoch % 10:
+        model.eval()
+        if not epoch % 10 and (epoch or single_batch_test):
             print("Testing")
             accuracy = []
             loses = []
@@ -89,6 +88,10 @@ def main():
                     writer.add_scalar("Accuracy/test", acc, epoch)
                 print('test accuracy', sum(accuracy) / len(accuracy))
                 print('test loss', (sum(loses) / len(loses)).item())
+                if save_model:
+                    save_param = f"E:{epoch+1}_A:{sum(accuracy) / len(accuracy)}"
+                    model.saveModel(save_dir_path,save_param)
+                    print("Model Saved")
 
     writer.flush()
     writer.close()

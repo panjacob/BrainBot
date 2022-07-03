@@ -15,6 +15,7 @@
 #BrainStudy:
 #Put your data here:
 BrainStudy/data/*
+BrainStudy/models/*
 
 #Runs (Training Log):
 BrainStudy/runs*
