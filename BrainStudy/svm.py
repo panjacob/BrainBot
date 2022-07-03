@@ -7,6 +7,7 @@ from model import *
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 import pywt
+from datetime import datetime
 
 DATA_PATH = "data/mentalload/raw"
 
@@ -53,3 +54,8 @@ label_pred = clf.predict(data_test_reduced)
 
 print("Miara accuracy:", metrics.accuracy_score(label_test, label_pred))
 # y_score = clf.decision_function(X_test)
+
+#save model
+save_path = "models/Model_SVM_" + datetime.now().strftime("%d.%m.%Y_%H:%M") + ".pkl"
+with open(save_path,'wb') as save_file:
+    pickle.dump(clf,save_file)

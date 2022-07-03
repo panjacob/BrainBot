@@ -16,7 +16,7 @@ DATA_PATH = DIR_PATH + "/raw"
 PICKLE_PATH_TRAIN = DIR_PATH + "/train.pickle"
 PICKLE_PATH_TEST = DIR_PATH + "/test.pickle"
 
-DATA_PICKLED = False  # Enable if Data has been saved previously saved in pickled files
+DATA_PICKLED = True  # Enable if Data has been saved previously saved in pickled files
 
 CLASSES = {
     1: 0,

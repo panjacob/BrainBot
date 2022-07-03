@@ -7,7 +7,7 @@ from brainset import *
 from model import *
 from torch.utils.tensorboard import SummaryWriter
 
-single_batch_test = True
+single_batch_test = False
 save_model = True
 save_dir_path = "models"
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
