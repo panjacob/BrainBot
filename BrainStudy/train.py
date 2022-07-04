@@ -10,7 +10,9 @@ from torch.utils.tensorboard import SummaryWriter
 single_batch_test = False
 save_model = True
 save_dir_path = "models"
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+#os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
+
 # TODO: Comment on this function
 def label_to_human_form(labels):
     result = []
@@ -42,8 +44,8 @@ def main():
         brainloader = [next(iter(brainloader))]
         print("Single Batch Test Chosen")
 
-    for epoch in range(1000):
-        print('epoch', epoch+1)
+    for epoch in range(1001):
+        print('epoch', epoch)
 
         train_accuracy = []
         train_loses = []
@@ -61,7 +63,8 @@ def main():
                 loss.backward()
                 # clip_grad_norm_(model.parameters(), max_norm=1)
                 optimalizer.step()
-                acc = accuracy_human(labels, outputs)
+                preds = [0 if out < 0.5 else 1 for out in outputs]
+                acc = accuracy_human(labels, preds)
                 train_accuracy.append(acc)
                 writer.add_scalar("Accuracy/train", acc, epoch)
                 train_loses.append(loss)
@@ -81,7 +84,8 @@ def main():
                     labels = torch.autograd.Variable(labels.to(device, non_blocking=True))
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
-                    acc = accuracy_human(labels, outputs)
+                    preds = [0 if out < 0.5 else 1 for out in outputs]
+                    acc = accuracy_human(labels, preds)
                     accuracy.append(acc)
                     loses.append(loss)
                     writer.add_scalar("Loss/test", loss, epoch)
@@ -89,7 +93,7 @@ def main():
                 print('test accuracy', sum(accuracy) / len(accuracy))
                 print('test loss', (sum(loses) / len(loses)).item())
                 if save_model:
-                    save_param = f"E:{epoch+1}_A:{sum(accuracy) / len(accuracy)}"
+                    save_param = f"E:{epoch}_A:{sum(accuracy) / len(accuracy)}"
                     model.saveModel(save_dir_path,save_param)
                     print("Model Saved")
 

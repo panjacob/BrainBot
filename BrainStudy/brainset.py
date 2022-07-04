@@ -34,12 +34,12 @@ def select_train_files():
     return result
 
 
-def load_data():
+def load_data(train_batch_size=4,test_batch_size=2):
     path = os.path.join(DATA_PATH)
     brainset_train = Brainset(path, is_trainset=True, load_pickled=DATA_PICKLED)
     brainset_test = Brainset(path, is_trainset=False, load_pickled=DATA_PICKLED)
-    train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
-    test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
+    train_loader = DataLoader(brainset_train, batch_size=train_batch_size, shuffle=True)
+    test_loader = DataLoader(brainset_test, batch_size=test_batch_size, shuffle=False)
     return train_loader, test_loader
 
 
