@@ -1,11 +1,13 @@
 """
 Neural network models
 """
-
+import os
 
 import torch
 import torch.nn as nn
 from torch import Tensor
+import copy
+from datetime import datetime
 
 
 class BinaryClassification(nn.Module):
@@ -124,3 +126,23 @@ class OneDNetScaled(nn.Module):
         if x.size(1) == 1:
             x = x.flatten()  # remove channel dim
         return x
+
+    def saveModel(self,save_dir_path : str,param : str = '', create_dir = False):
+        # Create Savable copy of model
+        model_states = copy.deepcopy(self.state_dict())
+        # Current time str - Used to differentiate saved models
+        now_str = datetime.now().strftime("%d.%m.%Y_%H:%M")
+        # Create New Fancy Save Name
+        save_name = "Model_OneDNetScaled_" + now_str + '_' + param + '.pt'
+        # Create Save Dir
+        if create_dir:
+            os.mkdir("save_dir_path")
+        # Create Save path
+        save_path =  save_dir_path+'/'+save_name
+        #Save model
+        torch.save(model_states, save_path)
+
+    def loadModel(self,load_path,load_device):
+        model_states = torch.load(load_path, map_location=load_device)
+        self.load_state_dict(model_states)
+
