@@ -24,17 +24,27 @@ CLASSES = {
 }
 
 
-def select_train_files():
-    files_idx = list(range(0, 30))  # random.sample(range(0, 35), size)
-    result = []
-    for idx in files_idx:
+def select_train_test_files():
+    #files_idx = list(range(0, 30))
+    #files_idx = random.sample(range(0, 35), size)
+    train_files_idx = list(range(0, 5))
+    train = []
+    for idx in train_files_idx:
         az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
-        result.append("Subject" + az + str(idx) + "_1.edf")
-        result.append("Subject" + az + str(idx) + "_2.edf")
-    return result
+        train.append("Subject" + az + str(idx) + "_1.edf")
+        train.append("Subject" + az + str(idx) + "_2.edf")
+
+    test_files_idx = list(range(5, 10))
+    test = []
+    for idx in test_files_idx:
+        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
+        test.append("Subject" + az + str(idx) + "_1.edf")
+        test.append("Subject" + az + str(idx) + "_2.edf")
+
+    return train, test
 
 
-def load_data(train_batch_size=4,test_batch_size=2):
+def load_data(train_batch_size=8,test_batch_size=2):
     path = os.path.join(DATA_PATH)
     brainset_train = Brainset(path, is_trainset=True, load_pickled=DATA_PICKLED)
     brainset_test = Brainset(path, is_trainset=False, load_pickled=DATA_PICKLED)
@@ -66,8 +76,7 @@ class Brainset(Dataset):
             files = os.listdir(path)
             files = filter(lambda x: x.endswith(".edf"), files)
             # Split files to test and train files:
-            test_files = select_train_files()
-            train_files = [x for x in files if x not in test_files]
+            train_files, test_files = select_train_test_files()
             # Set dataset files (either test or train)
             files = train_files if is_trainset else test_files
 
@@ -87,7 +96,7 @@ class Brainset(Dataset):
                 # if self.SPLIT_DATA is True:
 
                 # Cut signals into small signals (to get more data and to fit it into neural net input):
-                #
+
                 y_split = []
                 for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_PADING):
                     y_sample = y[:,i-self.SPLIT_LENGTH:i]
@@ -98,6 +107,15 @@ class Brainset(Dataset):
                 #y_split = np.split(y, y_ind, axis=1)[:-1]
                 for ysx in y_split:
                     self.brain_set.append([ysx, label, filename])
+
+                '''
+                # Cut signals into small signals (to get more data and to fit it into neural net input):
+                y_ind = [i for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_LENGTH)]
+                y_split = np.split(y, y_ind, axis=1)[:-1]
+                for ysx in y_split:
+                    self.brain_set.append([ysx, label, filename])
+                '''
+
 
                 #else:
                 #    self.brain_set.append([y, label, filename])
@@ -123,7 +141,7 @@ class Brainset(Dataset):
 
     def __normalize(self):
         # Data per channel normalisation:
-        sample_count = self.sample_number #self.SPLIT_LENGTH * len(self.brain_set)
+        sample_count = self.SPLIT_LENGTH * len(self.brain_set)
         for channel in range(21):
             tmp_sum = 0.0
 
