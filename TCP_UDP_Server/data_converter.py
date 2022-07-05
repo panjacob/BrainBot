@@ -2,6 +2,7 @@ import communication_parameters
 import numpy as np
 from scipy.signal import decimate
 from BrainStudy.svm_preprocessing import eeg_signal_to_dwt
+from BrainStudy.signal_parameters import *
 
 
 # EEG signal ranges and unit
@@ -13,11 +14,6 @@ UNIT = 1e-6  # μV
 
 CAL = (PHYSICAL_MAX - PHYSICAL_MIN) / (DIGITAL_MAX - DIGITAL_MIN)
 OFFSET = PHYSICAL_MIN - DIGITAL_MIN * CAL
-
-# TODO: Make common constants
-SPLIT_PADING = 25
-SPLIT_LENGTH = 200
-CHANNELS_COUNT = 16
 
 BIOSEMI_FREQ = 2000
 DATASET_FREQ = 500
@@ -47,10 +43,10 @@ def decode_data_from_bytes(raw_data):
     raw_data_array = np.array(raw_data)
     raw_data_array = raw_data_array.reshape((communication_parameters.words, 3))
     raw_data_array = np.transpose(raw_data_array)
-    normaldata = raw_data_array[2, :]*(256**3) + raw_data_array[1, :]*(256**2) + raw_data_array[0, :]*256 + 0
+    normal_data = raw_data_array[2, :]*(256**3) + raw_data_array[1, :]*(256**2) + raw_data_array[0, :]*256 + 0
     for i in range(communication_parameters.samples):
         for j in range(communication_parameters.channels):
-            data_struct[j, i] = normaldata[i + j].astype('float32')
+            data_struct[j, i] = normal_data[i + j].astype('float32')
             data_struct[j, i] *= CAL
             data_struct[j, i] += OFFSET
             data_struct[j, i] *= UNIT
