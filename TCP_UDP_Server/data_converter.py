@@ -1,5 +1,7 @@
+import TCP_UDP_Server.TcpIpServerPythonV1
 import communication_parameters
 import numpy as np
+import pickle
 from scipy.signal import decimate
 from BrainStudy.svm_preprocessing import eeg_signal_to_dwt
 from BrainStudy.signal_parameters import *
@@ -20,16 +22,9 @@ DATASET_FREQ = 500
 DECIMATION_FACTOR = BIOSEMI_FREQ / DATASET_FREQ
 
 # TODO: Load it from file in prepare_data_for_classification
-MEAN = [-1.53403974e-08, -6.20724583e-09,  2.46784659e-09,  6.78021528e-10,
-        -3.66308983e-09, -1.61879630e-08,  5.27457411e-09,  2.57755195e-09,
-        -1.01040387e-09, -8.43589110e-09,  1.17398935e-08,  4.17136015e-08,
-        2.66637965e-08,  3.27091492e-08, -2.20020517e-08, -1.55450426e-08]
-
-
-STD = [1.08722106e-05, 1.15112371e-05, 1.00754341e-05, 1.03625598e-05,
-       9.87264593e-06, 8.93015840e-06, 1.03201528e-05, 1.07836222e-05,
-       1.05311265e-05, 1.01829701e-05, 1.21622943e-05, 1.26108616e-05,
-       1.14071245e-05, 1.25667975e-05, 9.41451344e-06, 1.40940447e-05]
+with open(TCP_UDP_Server.TcpIpServerPythonV1.MEAN_STD_FILE_PATH, "rb") as mean_std_file:
+    MEAN = pickle.load(mean_std_file)
+    STD = pickle.load(mean_std_file)
 
 MEAN = np.tile(MEAN, (SPLIT_PADING, 1)).T
 STD = np.tile(STD, (SPLIT_PADING, 1)).T
@@ -53,7 +48,7 @@ def decode_data_from_bytes(raw_data):
     return data_struct
 
 
-def prepare_data_for_classification(decoded_data, mean_std_file_path):
+def prepare_data_for_classification(decoded_data):
     decimated_signal = np.apply_along_axis(decimate, 1, decoded_data, DECIMATION_FACTOR)  # Accounts for different freqs
     decimated_signal = decimated_signal[:, :SPLIT_PADING]
     decimated_signal -= MEAN
