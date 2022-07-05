@@ -30,7 +30,7 @@ CLASSES = {
 def select_train_test_files():
     #files_idx = list(range(0, 30))
     #files_idx = random.sample(range(0, 35), size)
-    train_files_idx = list(range(0, 5))
+    train_files_idx = list(range(0, 10))
     train = []
     for idx in train_files_idx:
         az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
