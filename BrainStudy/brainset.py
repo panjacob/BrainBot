@@ -5,6 +5,7 @@ Loading the data.
 import os
 import random
 import mne
+import json
 import math
 import numpy as np
 import pickle
@@ -15,23 +16,14 @@ DIR_PATH = "data/mentalload"
 DATA_PATH = DIR_PATH + "/raw"
 PICKLE_PATH_TRAIN = DIR_PATH + "/train.pickle"
 PICKLE_PATH_TEST = DIR_PATH + "/test.pickle"
+MEAN_STD_PATH = DIR_PATH + "/mean_std.txt"
 
-DATA_PICKLED = True  # Enable if Data has been saved previously saved in pickled files
+DATA_PICKLED = False  # Enable if Data has been saved previously saved in pickled files
 
 CLASSES = {
     1: 0,
     2: 1
 }
-
-
-def select_train_files():
-    files_idx = list(range(0, 30))  # random.sample(range(0, 35), size)
-    result = []
-    for idx in files_idx:
-        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
-        result.append("Subject" + az + str(idx) + "_1.edf")
-        result.append("Subject" + az + str(idx) + "_2.edf")
-    return result
 
 
 def load_data():
@@ -43,6 +35,17 @@ def load_data():
     return train_loader, test_loader
 
 
+def select_train_files():
+    train_percentage = 0.7
+    files_idx = random.sample(range(0, 35), math.ceil(35 * train_percentage))
+    result = []
+    for idx in files_idx:
+        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
+        result.append("Subject" + az + str(idx) + "_1.edf")
+        result.append("Subject" + az + str(idx) + "_2.edf")
+    return result
+
+
 class Brainset(Dataset):
     """
         Dataset to load EEG signal data from edf files (or pickled files).
@@ -50,26 +53,39 @@ class Brainset(Dataset):
     SIGNAL_LENGTH = 30477
     SPLIT_DATA = True
     SPLIT_LENGTH = 200
-    SPLIT_PADING = 5
+    SPLIT_PADING = 25
+    CHANNELS_COUNT = 16
 
-    def __init__(self, path, is_trainset, load_pickled=False):
+    def __init__(self, path, is_trainset, load_pickled=False, mean=None, std=None):
+        np.seterr(all='raise')
         # List containig the data:
+        self.mean = mean
+        self.std = std
         self.brain_set = []
-        self.sample_number = 0
+        self.total_sample_count = 0
+        self.normalization_sum = np.zeros(self.CHANNELS_COUNT)
+        self.normalization_sq_sum = np.zeros(self.CHANNELS_COUNT)
         if is_trainset:
             pickle_path = PICKLE_PATH_TRAIN
         else:
             pickle_path = PICKLE_PATH_TEST
 
+        with open("channel_mapping.json", 'r') as json_mapping_file:
+            self.channel_ordering = json.load(json_mapping_file)['mapping']
+
         if not load_pickled:
             # Load data from the source (edf files)
-            files = os.listdir(path)
+            files = sorted(os.listdir(path))
+            files = files[:36]
             files = filter(lambda x: x.endswith(".edf"), files)
             # Split files to test and train files:
-            test_files = select_train_files()
-            train_files = [x for x in files if x not in test_files]
+            train_files = select_train_files()
+            test_files = [x for x in files if x not in train_files]
             # Set dataset files (either test or train)
             files = train_files if is_trainset else test_files
+
+            y_all = np.empty((self.CHANNELS_COUNT, 0), dtype=np.float32)
+            y_all_list = []
 
             # Get data signals form files:
             for index, filename in enumerate(files):
@@ -81,29 +97,26 @@ class Brainset(Dataset):
                 data = mne.io.read_raw_edf(file, verbose=False)
                 raw_data = data.get_data()
                 # Cut data to unified size:
-                y = raw_data[:, :self.SIGNAL_LENGTH].astype(np.float32)
-                self.__normalize2(y)
-                # Check if there is a need to cut signals:
-                # if self.SPLIT_DATA is True:
+                # TODO: Discuss why should we even cut the data, for now only cut it so it is divisible for splitting
+                y_length = raw_data.shape[1] - (raw_data.shape[1] % self.SPLIT_LENGTH)
+                y_unordered = raw_data[:, :y_length].astype(np.float32)
+
+                # Pick and order channels like in our Biosemi EEG
+                y = self.__order_channels(y_unordered)
+                y_all = np.append(y_all, y, axis=1)
+                y_all_list.append(y)
 
                 # Cut signals into small signals (to get more data and to fit it into neural net input):
-                #
                 y_split = []
                 for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_PADING):
-                    y_sample = y[:,i-self.SPLIT_LENGTH:i]
+                    y_sample = y[:, i-self.SPLIT_LENGTH:i]
                     y_split.append(y_sample)
-                    self.sample_number = self.sample_number + 1
-                #y_split = np.array(y_split,np.float32)
-                #y_ind = [i for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_LENGTH)]
-                #y_split = np.split(y, y_ind, axis=1)[:-1]
                 for ysx in y_split:
                     self.brain_set.append([ysx, label, filename])
 
-                #else:
-                #    self.brain_set.append([y, label, filename])
+            # Normalize using precalculated sums
+            self.__normalize(y_all, y_all_list)
 
-            # Normalize data:
-            #self.__normalize()
             # Save to pickled files for later use:
             with open(pickle_path, "wb") as pickle_file:
                 pickle.dump(self.brain_set, pickle_file)
@@ -113,6 +126,12 @@ class Brainset(Dataset):
                     print("Test ", end="")
                 print("dataset normalized and saved")
 
+            # Save train mean and std to text file (for prediction):
+            if is_trainset:
+                with open(MEAN_STD_PATH, "w") as mean_std_file:
+                    with np.printoptions(threshold=np.inf):
+                        mean_std_file.write(f"Mean:\n{self.mean[:, 1]}\n\n\nStd:\n{self.std[:, 1]}")
+
         # Load normalized data, that was previously pickled
         else:
             with open(pickle_path, "rb") as pickle_file:
@@ -121,40 +140,26 @@ class Brainset(Dataset):
         # Shuffle the data
         random.shuffle(self.brain_set)
 
-    def __normalize(self):
-        # Data per channel normalisation:
-        sample_count = self.sample_number #self.SPLIT_LENGTH * len(self.brain_set)
-        for channel in range(21):
-            tmp_sum = 0.0
+    def __normalize(self, y_all, y_all_list):
+        # Normalize using the calcualted sums
+        if self.mean is None or self.std is None:
+            self.mean = np.zeros(self.CHANNELS_COUNT)
+            self.std = np.zeros(self.CHANNELS_COUNT)
+            for i in range(self.CHANNELS_COUNT):
+                self.mean[i] = y_all[i, :].mean()
+                self.std[i] = y_all[i, :].std()
 
-            for y, _, _ in self.brain_set:
-                tmp_sum += sum(y[channel])
-            mean = tmp_sum / sample_count
-            tmp_sum = 0.0
+            self.mean = np.tile(self.mean, (self.SPLIT_LENGTH, 1)).T
+            self.std = np.tile(self.std, (self.SPLIT_LENGTH, 1)).T
 
-            for y, _, _ in self.brain_set:
-                tmp_sum += sum([(sample_y_val - mean) ** 2 for sample_y_val in y[channel]])
-            std = math.sqrt(tmp_sum / sample_count)
+        for y in y_all_list:
+            for i in range(0, y.shape[1], self.SPLIT_LENGTH):
+                y[:, i:i+self.SPLIT_LENGTH] -= self.mean
+                y[:, i:i+self.SPLIT_LENGTH] /= self.std
 
-            for i, (y, _, _) in enumerate(self.brain_set):
-                self.brain_set[i][0][channel] = [(old_val - mean) / std for old_val in y[channel]]
-
-    def __normalize2(self,data):
-        # Data per channel normalisation:
-        sample_count = data.shape[1]
-        for channel in range(data.shape[0]):
-
-
-            mean = sum(data[channel]) / sample_count
-
-            tmp_sum = 0.0
-            for y in data.T:
-                tmp_sum += (y[channel] - mean) ** 2
-            std = math.sqrt(tmp_sum / sample_count)
-
-            for i, y in enumerate( data.T):
-                data[channel][i] = (y[channel] - mean) / std
-
+    def __order_channels(self, unordered):
+        ordered = unordered[self.channel_ordering, :]
+        return ordered
 
     def __len__(self):
         return len(self.brain_set)

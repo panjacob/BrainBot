@@ -63,7 +63,6 @@ const readAPI = async () => {
     roadInit()
     const socket = new WebSocket('ws://localhost:5000' + '/echo');
     await delay(2000)
-    socket.send("Clinet says hello");
 
     socket.addEventListener('message', data => {
         const commands = JSON.parse(data.data)
