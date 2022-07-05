@@ -123,7 +123,7 @@ class Brainset(Dataset):
 
                 # Pick and order channels like in our Biosemi EEG
                 y = self.__order_channels(y_unordered)
-                y = y[REMOVE_PADDING:-REMOVE_PADDING]
+                y = y[:,REMOVE_PADDING:-REMOVE_PADDING]
                 y_all = np.append(y_all, y, axis=1)
                 y_all_list.append(y)
 
