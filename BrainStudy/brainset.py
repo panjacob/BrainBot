@@ -19,8 +19,6 @@ PICKLE_PATH_TRAIN = DIR_PATH + "/train.pickle"
 PICKLE_PATH_TEST = DIR_PATH + "/test.pickle"
 MEAN_STD_PATH = DIR_PATH + "/mean_std.txt"
 
-DATA_PICKLED = False  # Enable if Data has been saved previously saved in pickled files
-
 CLASSES = {
     1: 0,
     2: 1
@@ -47,10 +45,10 @@ def select_train_test_files():
     return train, test
 
 
-def load_data(train_batch_size=8,test_batch_size=2):
+def load_data(train_batch_size=8,test_batch_size=2,load_pickled_data=True):
     path = os.path.join(DATA_PATH)
-    brainset_train = Brainset(path, is_trainset=True, load_pickled=DATA_PICKLED)
-    brainset_test = Brainset(path, is_trainset=False, load_pickled=DATA_PICKLED)
+    brainset_train = Brainset(path, is_trainset=True, load_pickled=load_pickled_data)
+    brainset_test = Brainset(path, is_trainset=False, load_pickled=load_pickled_data)
     train_loader = DataLoader(brainset_train, batch_size=train_batch_size, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=test_batch_size, shuffle=False)
     return train_loader, test_loader
@@ -70,6 +68,8 @@ def select_train_files():
 class Brainset(Dataset):
     """
         Dataset to load EEG signal data from edf files (or pickled files).
+        is_trainset - Enable if this dataset will be used for training
+        load_pickled - Enable if Data has been saved previously saved in pickled files
     """
 
 
@@ -157,6 +157,7 @@ class Brainset(Dataset):
         else:
             with open(pickle_path, "rb") as pickle_file:
                 self.brain_set = pickle.load(pickle_file)
+            print("Dataset Loaded from pickled file")
 
         # Shuffle the data
         random.shuffle(self.brain_set)

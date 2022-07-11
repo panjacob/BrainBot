@@ -100,7 +100,7 @@ def main():
                 writer.add_scalar("Accuracy/test", sum(accuracy) / len(accuracy), epoch)
                 print('test accuracy', sum(accuracy) / len(accuracy))
                 print('test loss', (sum(loses) / len(loses)).item())
-                if not epoch % 50 and save_model:
+                if not epoch % 5 and save_model:
                     save_param = f"E:{epoch}_A:{sum(accuracy) / len(accuracy)}"
                     model.saveModel(save_dir_path,save_param)
                     print("Model Saved")
