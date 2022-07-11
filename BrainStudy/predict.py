@@ -10,7 +10,6 @@ test_batch_size = 1
 
 
 def main():
-
     torch.set_default_dtype(torch.float32)
     _, testloader = load_data(test_batch_size=test_batch_size)
     device = torch.device("cuda")
@@ -52,9 +51,5 @@ def main():
         print('Mean loss', (sum(loses) / len(loses)).item())
 
 
-
 if __name__ == "__main__":
     main()
-
-
-
