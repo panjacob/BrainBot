@@ -18,9 +18,9 @@ def index():
 @sock.route('/echo')
 def echo(ws):
     while True:
-        data = ws.receive()
-        label = struct.unpack("i", data)
-        time.sleep(2)
+        #data = ws.receive()
+        #label = struct.unpack("i", data)
+        #time.sleep(2)
         left = False
         forward = (label == -1)
         data = {'left': left, "forward": forward}
