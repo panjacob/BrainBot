@@ -28,7 +28,7 @@ CLASSES = {
 def select_train_test_files():
     #files_idx = list(range(0, 30))
     #files_idx = random.sample(range(0, 35), size)
-    train_files_idx = list(range(0, 5))
+    train_files_idx = list(range(0, 35))
     train = []
     for idx in train_files_idx:
         az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
@@ -82,6 +82,7 @@ class Brainset(Dataset):
         self.total_sample_count = 0
         self.normalization_sum = np.zeros(CHANNELS_COUNT)
         self.normalization_sq_sum = np.zeros(CHANNELS_COUNT)
+        self.is_trainset = is_trainset
         if is_trainset:
             pickle_path = PICKLE_PATH_TRAIN
         else:
@@ -188,3 +189,20 @@ class Brainset(Dataset):
 
     def __getitem__(self, idx):
         return self.brain_set[idx]
+
+    def stats(self):
+        if self.is_trainset :
+            print("Train",end=' ')
+        else:
+            print("Test", end=' ')
+        print("Dataset Stats:")
+        print("Samples: ", len(self.brain_set))
+        ones = 0
+        zeroes = 0
+        for data in self.brain_set:
+            if data[1] == 1:
+                ones = ones + 1
+            else:
+                zeroes = zeroes + 1
+        print("Mental Load Samples: ",ones)
+        print("Quiet Samples: ", zeroes)
