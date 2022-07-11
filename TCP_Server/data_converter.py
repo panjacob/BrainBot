@@ -1,10 +1,10 @@
 import pywt
-
 import communication_parameters
 import numpy as np
 import pickle
 from scipy.signal import decimate
 from BrainStudy.signal_parameters import *
+
 
 def eeg_signal_to_dwt(data):
     c_allchannels = np.empty(0)
@@ -13,20 +13,6 @@ def eeg_signal_to_dwt(data):
         c_allchannels = np.append(c_allchannels, ca1)
         c_allchannels = np.append(c_allchannels, cd1)
     return c_allchannels
-
-# EEG signal ranges and unit
-DIGITAL_MIN = -8388608.0
-DIGITAL_MAX = 8388607.0
-PHYSICAL_MIN = -262144.0
-PHYSICAL_MAX = 262143.0
-UNIT = 1e-6  # μV
-
-CAL = (PHYSICAL_MAX - PHYSICAL_MIN) / (DIGITAL_MAX - DIGITAL_MIN)
-OFFSET = PHYSICAL_MIN - DIGITAL_MIN * CAL
-
-BIOSEMI_FREQ = 2000
-DATASET_FREQ = 500
-DECIMATION_FACTOR = int(BIOSEMI_FREQ / DATASET_FREQ)
 
 
 def load_mean_std(mean_std_file_path):
@@ -46,7 +32,6 @@ def decode_data_from_bytes(raw_data):
     # 32 bit unsigned words reorder
     raw_data_array = np.array(raw_data)
     raw_data_array = raw_data_array.reshape((communication_parameters.words, 3))
-    #debug_row_data_array = raw_data_array.reshape((communication_parameters.samples*3,communication_parameters.channels)).T
     raw_data_array = raw_data_array.astype("int32")
     raw_data_array = np.flip(raw_data_array, 0)
     raw_data_array = ((raw_data_array[:, 0]) +
@@ -54,8 +39,7 @@ def decode_data_from_bytes(raw_data):
                       (raw_data_array[:, 2] << 16))
     raw_data_array[raw_data_array >= (1 << 23)] -= (1 << 24)
     normal_data = raw_data_array
-    debug_normal_data = normal_data.reshape((communication_parameters.samples,communication_parameters.channels)).T
-    x = 1
+
     for j in range(communication_parameters.channels):
         for i in range(communication_parameters.samples):
             data_struct[j, i] = normal_data[i * communication_parameters.channels + j].astype('float32')

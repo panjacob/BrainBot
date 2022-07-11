@@ -22,64 +22,65 @@ def eeg_signal_to_dwt(data):
     return c_allchannels
 
 
-path = os.path.join(DATA_PATH)
-train = Brainset(path, is_trainset=True, load_pickled=False)
-# Test set should be normalized with TRAINING mean and std, just like real data:
-test = Brainset(path, is_trainset=False, load_pickled=False, mean=train.mean, std=train.std).brain_set
-train = train.brain_set
+if __name__ == '__main__':
+    path = os.path.join(DATA_PATH)
+    train = Brainset(path, is_trainset=True, load_pickled=False)
+    # Test set should be normalized with TRAINING mean and std, just like real data:
+    test = Brainset(path, is_trainset=False, load_pickled=False, mean=train.mean, std=train.std).brain_set
+    train = train.brain_set
 
-data_size = train[0][0].shape
+    data_size = train[0][0].shape
 
-data_test = [test_list[0] for test_list in test]
-data_train = [train_list[0] for train_list in train]
+    data_test = [test_list[0] for test_list in test]
+    data_train = [train_list[0] for train_list in train]
 
-label_test = [test_list[1] for test_list in test]
-label_train = [train_list[1] for train_list in train]
+    label_test = [test_list[1] for test_list in test]
+    label_train = [train_list[1] for train_list in train]
 
-del test
-del train
+    del test
+    del train
 
-data_train_transformed = np.empty((len(data_train), data_size[0] * data_size[1]), dtype="float32")
-data_test_transformed = np.empty((len(data_test), data_size[0] * data_size[1]), dtype="float32")
+    data_train_transformed = np.empty((len(data_train), data_size[0] * data_size[1]), dtype="float32")
+    data_test_transformed = np.empty((len(data_test), data_size[0] * data_size[1]), dtype="float32")
 
-print("Starting...")
+    print("Starting...")
 
-for index, sample in enumerate(data_test):
-    data_test_transformed[index, :] = eeg_signal_to_dwt(sample)
-    data_test[index] = 0
+    for index, sample in enumerate(data_test):
+        data_test_transformed[index, :] = eeg_signal_to_dwt(sample)
+        data_test[index] = 0
 
-del data_test
+    del data_test
 
-print("Writing to files")
+    print("Writing to files")
 
-with open(OUTPUT_PATH_TEST, "wb", buffering=0) as test_file:
-    np.save(test_file, data_test_transformed, allow_pickle=False)
+    with open(OUTPUT_PATH_TEST, "wb", buffering=0) as test_file:
+        np.save(test_file, data_test_transformed, allow_pickle=False)
 
-del data_test_transformed
+    del data_test_transformed
 
-with open(OUTPUT_PATH_TEST_LABELS, "wb") as test_file_labels:
-    pickle.dump(label_test, test_file_labels)
+    with open(OUTPUT_PATH_TEST_LABELS, "wb") as test_file_labels:
+        pickle.dump(label_test, test_file_labels)
 
-del label_test
+    del label_test
 
-gc.collect()
+    gc.collect()
 
-print("Starting...")
+    print("Starting...")
 
-for index, sample in enumerate(data_train):
-    data_train_transformed[index, :] = eeg_signal_to_dwt(sample)
-    data_train[index] = None
+    for index, sample in enumerate(data_train):
+        data_train_transformed[index, :] = eeg_signal_to_dwt(sample)
+        data_train[index] = None
 
-del data_train
+    del data_train
 
-print("Writing to files")
+    print("Writing to files")
 
-with open(OUTPUT_PATH_TRAIN, "wb", buffering=0) as train_file:
-    np.save(train_file, data_train_transformed, allow_pickle=False)
+    with open(OUTPUT_PATH_TRAIN, "wb", buffering=0) as train_file:
+        np.save(train_file, data_train_transformed, allow_pickle=False)
 
-del data_train_transformed
+    del data_train_transformed
 
-with open(OUTPUT_PATH_TRAIN_LABELS, "wb") as train_file_labels:
-    pickle.dump(label_train, train_file_labels)
+    with open(OUTPUT_PATH_TRAIN_LABELS, "wb") as train_file_labels:
+        pickle.dump(label_train, train_file_labels)
 
-del label_train
+    del label_train
