@@ -10,6 +10,7 @@ import math
 import numpy as np
 import pickle
 from torch.utils.data import Dataset, DataLoader
+from signal_parameters import *
 
 
 DIR_PATH = "data/mentalload"
@@ -26,12 +27,32 @@ CLASSES = {
 }
 
 
-def load_data():
+def select_train_test_files():
+    #files_idx = list(range(0, 30))
+    #files_idx = random.sample(range(0, 35), size)
+    train_files_idx = list(range(0, 5))
+    train = []
+    for idx in train_files_idx:
+        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
+        train.append("Subject" + az + str(idx) + "_1.edf")
+        train.append("Subject" + az + str(idx) + "_2.edf")
+
+    test_files_idx = list(range(5, 10))
+    test = []
+    for idx in test_files_idx:
+        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
+        test.append("Subject" + az + str(idx) + "_1.edf")
+        test.append("Subject" + az + str(idx) + "_2.edf")
+
+    return train, test
+
+
+def load_data(train_batch_size=8,test_batch_size=2):
     path = os.path.join(DATA_PATH)
     brainset_train = Brainset(path, is_trainset=True, load_pickled=DATA_PICKLED)
     brainset_test = Brainset(path, is_trainset=False, load_pickled=DATA_PICKLED)
-    train_loader = DataLoader(brainset_train, batch_size=4, shuffle=True)
-    test_loader = DataLoader(brainset_test, batch_size=2, shuffle=False)
+    train_loader = DataLoader(brainset_train, batch_size=train_batch_size, shuffle=True)
+    test_loader = DataLoader(brainset_test, batch_size=test_batch_size, shuffle=False)
     return train_loader, test_loader
 
 
@@ -50,11 +71,7 @@ class Brainset(Dataset):
     """
         Dataset to load EEG signal data from edf files (or pickled files).
     """
-    SIGNAL_LENGTH = 30477
-    SPLIT_DATA = True
-    SPLIT_LENGTH = 200
-    SPLIT_PADING = 25
-    CHANNELS_COUNT = 16
+
 
     def __init__(self, path, is_trainset, load_pickled=False, mean=None, std=None):
         np.seterr(all='raise')
@@ -63,8 +80,8 @@ class Brainset(Dataset):
         self.std = std
         self.brain_set = []
         self.total_sample_count = 0
-        self.normalization_sum = np.zeros(self.CHANNELS_COUNT)
-        self.normalization_sq_sum = np.zeros(self.CHANNELS_COUNT)
+        self.normalization_sum = np.zeros(CHANNELS_COUNT)
+        self.normalization_sq_sum = np.zeros(CHANNELS_COUNT)
         if is_trainset:
             pickle_path = PICKLE_PATH_TRAIN
         else:
@@ -78,13 +95,16 @@ class Brainset(Dataset):
             files = sorted(os.listdir(path))
             files = files[:36]
             files = filter(lambda x: x.endswith(".edf"), files)
+            
             # Split files to test and train files:
             train_files = select_train_files()
             test_files = [x for x in files if x not in train_files]
+            #train_files, test_files = select_train_test_files()
+            
             # Set dataset files (either test or train)
             files = train_files if is_trainset else test_files
 
-            y_all = np.empty((self.CHANNELS_COUNT, 0), dtype=np.float32)
+            y_all = np.empty((CHANNELS_COUNT, 0), dtype=np.float32)
             y_all_list = []
 
             # Get data signals form files:
@@ -98,18 +118,19 @@ class Brainset(Dataset):
                 raw_data = data.get_data()
                 # Cut data to unified size:
                 # TODO: Discuss why should we even cut the data, for now only cut it so it is divisible for splitting
-                y_length = raw_data.shape[1] - (raw_data.shape[1] % self.SPLIT_LENGTH)
+                y_length = raw_data.shape[1] - (raw_data.shape[1] % SPLIT_LENGTH)
                 y_unordered = raw_data[:, :y_length].astype(np.float32)
 
                 # Pick and order channels like in our Biosemi EEG
                 y = self.__order_channels(y_unordered)
+                y = y[:, REMOVE_PADDING:-REMOVE_PADDING]
                 y_all = np.append(y_all, y, axis=1)
                 y_all_list.append(y)
 
                 # Cut signals into small signals (to get more data and to fit it into neural net input):
                 y_split = []
-                for i in range(self.SPLIT_LENGTH, y.shape[1], self.SPLIT_PADING):
-                    y_sample = y[:, i-self.SPLIT_LENGTH:i]
+                for i in range(SPLIT_LENGTH, y.shape[1], SPLIT_PADING):
+                    y_sample = y[:, i-SPLIT_LENGTH:i]
                     y_split.append(y_sample)
                 for ysx in y_split:
                     self.brain_set.append([ysx, label, filename])
@@ -143,19 +164,19 @@ class Brainset(Dataset):
     def __normalize(self, y_all, y_all_list):
         # Normalize using the calcualted sums
         if self.mean is None or self.std is None:
-            self.mean = np.zeros(self.CHANNELS_COUNT)
-            self.std = np.zeros(self.CHANNELS_COUNT)
-            for i in range(self.CHANNELS_COUNT):
+            self.mean = np.zeros(CHANNELS_COUNT)
+            self.std = np.zeros(CHANNELS_COUNT)
+            for i in range(CHANNELS_COUNT):
                 self.mean[i] = y_all[i, :].mean()
                 self.std[i] = y_all[i, :].std()
 
-            self.mean = np.tile(self.mean, (self.SPLIT_LENGTH, 1)).T
-            self.std = np.tile(self.std, (self.SPLIT_LENGTH, 1)).T
+            self.mean = np.tile(self.mean, (SPLIT_LENGTH, 1)).T
+            self.std = np.tile(self.std, (SPLIT_LENGTH, 1)).T
 
         for y in y_all_list:
-            for i in range(0, y.shape[1], self.SPLIT_LENGTH):
-                y[:, i:i+self.SPLIT_LENGTH] -= self.mean
-                y[:, i:i+self.SPLIT_LENGTH] /= self.std
+            for i in range(0, y.shape[1], SPLIT_LENGTH):
+                y[:, i:i+SPLIT_LENGTH] -= self.mean
+                y[:, i:i+SPLIT_LENGTH] /= self.std
 
     def __order_channels(self, unordered):
         ordered = unordered[self.channel_ordering, :]
