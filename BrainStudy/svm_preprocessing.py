@@ -1,7 +1,7 @@
 import gc
 
-from brainset import *
-from model import *
+from BrainStudy.brainset import *
+from BrainStudy.model import *
 import pywt
 import pickle
 

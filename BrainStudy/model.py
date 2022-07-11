@@ -40,7 +40,7 @@ class OneDNet(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv1d(16, 42, kernel_size=(3,)),
+            nn.Conv1d(21, 42, kernel_size=(3,)),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=3),  # downsize 3 times
 
@@ -88,7 +88,7 @@ class OneDNetScaled(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv1d(16, 42, kernel_size=(3,)),
+            nn.Conv1d(21, 42, kernel_size=(3,)),
             #nn.Dropout2d(p=0.2),
             nn.LeakyReLU(negative_slope=0.01,inplace=True),
             nn.MaxPool1d(kernel_size=2),  # downsize 2 times
