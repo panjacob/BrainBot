@@ -22,9 +22,9 @@ def index():
 @sock.route('/echo')
 def echo(sock):
     while True:
-    	# data = sock.receive()
-        # data = ws.receive()
-        # label = struct.unpack("i", data)
+        data = sock.receive()
+        #data = ws.receive()
+        label = struct.unpack("i", data)
         time.sleep(2)
         left = False
         forward = (label == -1)
