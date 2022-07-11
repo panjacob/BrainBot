@@ -12,6 +12,9 @@
 *plots
 *logs
 
+#Pickle
+*.pkl
+
 #BrainStudy:
 #Put your data here:
 BrainStudy/data/*
