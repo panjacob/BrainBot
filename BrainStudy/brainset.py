@@ -118,9 +118,8 @@ class Brainset(Dataset):
                 file = os.path.join(DATA_PATH, filename)
                 data = mne.io.read_raw_edf(file, verbose=False)
                 raw_data = data.get_data()
-                # Cut data to unified size:
-                # TODO: Discuss why should we even cut the data, for now only cut it so it is divisible for splitting
-                y_length = raw_data.shape[1] - (raw_data.shape[1] % SPLIT_LENGTH)
+                # Cut data to unified size (and divisible into neat splits):
+                y_length = MAX_LENGTH - (MAX_LENGTH % SPLIT_LENGTH)
                 y_unordered = raw_data[:, :y_length].astype(np.float32)
 
                 if use_filter:
