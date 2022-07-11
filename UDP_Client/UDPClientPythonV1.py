@@ -4,7 +4,6 @@ import struct
 import websockets
 import asyncio
 import json
-from TCP_Server.communication_parameters import REMOTE_UDP_ADDRESS
 from communication_parameters import *
 
 async def forward_message(message):
