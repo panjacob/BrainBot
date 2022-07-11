@@ -23,7 +23,7 @@ def eeg_signal_to_dwt(data):
 
 if __name__ == '__main__':
     path = os.path.join(DATA_PATH)
-    train = Brainset(path, is_trainset=True, load_pickled=False, use_filter=True)
+    train = Brainset(path, is_trainset=True, load_pickled=False, use_filter=False)
     # Test set should be normalized with TRAINING mean and std, just like real data:
     test = Brainset(path, is_trainset=False, load_pickled=False, mean=train.mean, std=train.std).brain_set
     train = train.brain_set
