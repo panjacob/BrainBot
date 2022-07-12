@@ -1,5 +1,5 @@
 import pywt
-import communication_parameters
+import TCP_Server.communication_parameters
 import numpy as np
 import pickle
 from scipy.signal import decimate

@@ -4,6 +4,7 @@ from BrainStudy.model import *
 import pywt
 import pickle
 from brainset_parameters import *
+from TCP_Server.data_converter import load_mean_std
 
 
 OUTPUT_PATH_TRAIN = f"{PATH_PREFIX}svm/svm_train.npy"
@@ -22,10 +23,13 @@ def eeg_signal_to_dwt(data):
 
 
 if __name__ == '__main__':
+    mean, std = load_mean_std("./mean_std.pkl")
+    mean = np.tile(mean[:, 0], (SPLIT_LENGTH, 1)).T
+    std = np.tile(std[:, 0], (SPLIT_LENGTH, 1)).T
     path = os.path.join(DATA_PATH)
-    train = Brainset(path, is_trainset=True, load_pickled=False, use_filter=False)
+    train = Brainset(path, is_trainset=True, load_pickled=False, use_filter=True, mean=mean, std=std, unordered=True)
     # Test set should be normalized with TRAINING mean and std, just like real data:
-    test = Brainset(path, is_trainset=False, load_pickled=False, mean=train.mean, std=train.std).brain_set
+    test = Brainset(path, is_trainset=False, load_pickled=False, use_filter=True, mean=mean, std=std, unordered=True).brain_set
     train = train.brain_set
 
     data_size = train[0][0].shape

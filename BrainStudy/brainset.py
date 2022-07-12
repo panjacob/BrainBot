@@ -64,7 +64,7 @@ class Brainset(Dataset):
     """
 
 
-    def __init__(self, path, is_trainset, load_pickled=False, mean=None, std=None, use_filter=False):
+    def __init__(self, path, is_trainset, load_pickled=False, mean=None, std=None, use_filter=False, unordered=False):
         np.seterr(all='raise')
         # List containig the data:
         self.brain_set = []
@@ -95,16 +95,16 @@ class Brainset(Dataset):
         if not load_pickled:
             # Load data from the source (edf files)
             files = sorted(os.listdir(path))
-            files = files[:36]
-            files = filter(lambda x: x.endswith(".edf"), files)
+            files = files
+            #files = filter(lambda x: x.endswith(".bdf"), files)
             
             # Split files to test and train files:
-            train_files = select_train_files()
-            test_files = [x for x in files if x not in train_files]
+            #train_files = select_train_files()
+            #test_files = [x for x in files if x not in train_files]
             #train_files, test_files = select_train_test_files()
             
             # Set dataset files (either test or train)
-            files = train_files if is_trainset else test_files
+            #files = train_files if is_trainset else test_files
 
             y_all = np.empty((CHANNELS_COUNT, 0), dtype=np.float32)
             y_all_list = []
@@ -112,15 +112,15 @@ class Brainset(Dataset):
             # Get data signals form files:
             for index, filename in enumerate(files):
                 # Extract labels:
-                class_idx = int(filename.split('_')[-1][0])  # labels are saved inside file_name at the end after "_"
+                class_idx = 2  # labels are saved inside file_name at the end after "_"
                 label = np.float32(CLASSES[class_idx])  # labels are shifted 0,1 <- 1,2 in files
                 # Extract data:
                 file = os.path.join(DATA_PATH, filename)
-                data = mne.io.read_raw_edf(file, verbose=False)
+                data = mne.io.read_raw_bdf(file, verbose=False)
                 raw_data = data.get_data()
                 # Cut data to unified size (and divisible into neat splits):
                 y_length = MAX_LENGTH - (MAX_LENGTH % SPLIT_LENGTH)
-                y_unordered = raw_data[:, :y_length].astype(np.float32)
+                y_unordered = raw_data[:17, :y_length].astype(np.float32)
 
                 if use_filter:
                     y_filtered = np.apply_along_axis(self.__filter, 1, y_unordered)
@@ -128,7 +128,10 @@ class Brainset(Dataset):
                     y_filtered = y_unordered
 
                 # Pick and order channels like in our Biosemi EEG
-                y = self.__order_channels(y_filtered)
+                if unordered:
+                    y = y_filtered
+                else:
+                    y = self.__order_channels(y_filtered)
                 y = y[:, REMOVE_PADDING:-REMOVE_PADDING]
                 y_all = np.append(y_all, y, axis=1)
                 y_all_list.append(y)

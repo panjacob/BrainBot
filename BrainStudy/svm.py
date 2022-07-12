@@ -27,17 +27,17 @@ if __name__ == '__main__':
         label_test = np.array(label_test)
         label_test[label_test == 0.0] = -1.0
 
-    lda = LinearDiscriminantAnalysis()
-    lda.fit(data_train, label_train)
-    #with open("./models/Model_LDA_05.07.2022_07:37.pkl", "rb") as lda_file:
-    #    lda = pickle.load(lda_file)
+    #lda = LinearDiscriminantAnalysis()
+    #lda.fit(data_train, label_train)
+    with open("./model/Model_LDA_05.07.2022_13_20.pkl", "rb") as lda_file:
+        lda = pickle.load(lda_file)
     data_train_reduced = lda.transform(data_train)
     data_test_reduced = lda.transform(data_test)
 
-    clf = svm.SVC(kernel='rbf', C=0.1)
-    clf.fit(data_train_reduced, label_train)
-    #with open("./models/Model_SVM_05.07.2022_07:37.pkl", "rb") as svm_file:
-    #    clf = pickle.load(svm_file)
+    #clf = svm.SVC(kernel='rbf', C=0.1)
+    #clf.fit(data_train_reduced, label_train)
+    with open("./model/Model_SVM_05.07.2022_13_20.pkl", "rb") as svm_file:
+        clf = pickle.load(svm_file)
     label_pred = clf.predict(data_test_reduced)
 
     print("Miara accuracy:", metrics.accuracy_score(label_test, label_pred))
@@ -46,11 +46,11 @@ if __name__ == '__main__':
     models_postfix = datetime.now().strftime("%d.%m.%Y_%H:%M") + ".pkl"
 
     # Save SVM model
-    save_path = "models/Model_SVM_" + models_postfix
+    save_path = "model/Model_SVM_" + models_postfix
     with open(save_path, 'wb') as save_file:
         pickle.dump(clf, save_file)
 
     # Save LDA model
-    save_path = "models/Model_LDA_" + models_postfix
+    save_path = "model/Model_LDA_" + models_postfix
     with open(save_path, 'wb') as save_file:
         pickle.dump(lda, save_file)
