@@ -41,7 +41,7 @@ def select_train_test_files():
         train.append("Subject" + az + str(idx) + "_1.edf")
         train.append("Subject" + az + str(idx) + "_2.edf")
 
-    test_files_idx = list(range(5, 10))
+    test_files_idx = list(range(30, 36))
     test = []
     for idx in test_files_idx:
         az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
@@ -114,9 +114,9 @@ class Brainset(Dataset):
             files = filter(lambda x: x.endswith(".edf"), files)
             
             # Split files to test and train files:
-            train_files = select_train_files()
-            test_files = [x for x in files if x not in train_files]
-            #train_files, test_files = select_train_test_files()
+            #train_files = select_train_files()
+            #test_files = [x for x in files if x not in train_files]
+            train_files, test_files = select_train_test_files()
             
             # Set dataset files (either test or train)
             files = train_files if is_trainset else test_files

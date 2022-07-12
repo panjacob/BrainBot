@@ -11,8 +11,8 @@ import pandas as pd
 import seaborn as sn
 from sklearn.metrics import roc_auc_score, RocCurveDisplay
 
-load_pickled_data = True
-single_batch_test = True
+load_pickled_data = False
+single_batch_test = False
 save_model = True
 save_dir_path = "models"
 #os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -105,7 +105,7 @@ def main():
     writer = SummaryWriter()
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = load_data(load_pickled_data=load_pickled_data)
-    #brainloader.dataset.stats()
+    brainloader.dataset.stats()
     print("Data Loaded")
     device = torch.device("cuda")
     model = OneDNetScaled()
@@ -154,7 +154,7 @@ def main():
 
 
         model.eval()
-        if not epoch % 1 and (epoch or single_batch_test):
+        if not epoch % 2 and (epoch or single_batch_test):
             print("Testing")
             eval_time = time.perf_counter()
             accuracy = []
@@ -184,9 +184,9 @@ def main():
                 plt.close('all')
                 print('test accuracy', sum(accuracy) / len(accuracy))
                 print('test loss', (sum(loses) / len(loses)).item())
-                print('test time', time.perf_counter()  - eval_time)
-                if not epoch % 10 and save_model:
-                    save_param = f"E:{epoch}_A:{sum(accuracy) / len(accuracy)}"
+                print('test time', time.perf_counter() - eval_time)
+                if not epoch % 5 and save_model and (epoch or single_batch_test):
+                    save_param = f"E.{epoch}_A.{sum(accuracy) / len(accuracy)}"
                     model.saveModel(save_dir_path,save_param)
                     print("Model Saved")
 
