@@ -1,16 +1,15 @@
 import gc
-
 from BrainStudy.brainset import *
 from BrainStudy.model import *
 import pywt
 import pickle
+from brainset_parameters import *
 
 
-DATA_PATH = "data/mentalload/raw"
-OUTPUT_PATH_TRAIN = "data/mentalload/svm/svm_train.npy"
-OUTPUT_PATH_TRAIN_LABELS = "data/mentalload/svm/svm_train_labels.pkl"
-OUTPUT_PATH_TEST = "data/mentalload/svm/svm_test.npy"
-OUTPUT_PATH_TEST_LABELS = "data/mentalload/svm/svm_test_labels.pkl"
+OUTPUT_PATH_TRAIN = f"{PATH_PREFIX}svm/svm_train.npy"
+OUTPUT_PATH_TRAIN_LABELS = f"{PATH_PREFIX}svm/svm_train_labels.pkl"
+OUTPUT_PATH_TEST = f"{PATH_PREFIX}svm/svm_test.npy"
+OUTPUT_PATH_TEST_LABELS = f"{PATH_PREFIX}svm/svm_test_labels.pkl"
 
 
 def eeg_signal_to_dwt(data):
@@ -24,7 +23,7 @@ def eeg_signal_to_dwt(data):
 
 if __name__ == '__main__':
     path = os.path.join(DATA_PATH)
-    train = Brainset(path, is_trainset=True, load_pickled=False)
+    train = Brainset(path, is_trainset=True, load_pickled=False, use_filter=False)
     # Test set should be normalized with TRAINING mean and std, just like real data:
     test = Brainset(path, is_trainset=False, load_pickled=False, mean=train.mean, std=train.std).brain_set
     train = train.brain_set

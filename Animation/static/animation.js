@@ -60,12 +60,12 @@ function delay(time) {
 
 
 const readAPI = async () => {
-    roadInit()
-    const socket = new WebSocket('ws://localhost:5500' + '/echo');
-    await delay(2000)
-
+    halo = 0
+    roadInit();
+    const socket = new WebSocket('ws://localhost:5000/echo');
+    //await delay(2000)
     socket.addEventListener('message', data => {
-    	console.log("Nowa Wiadomosc")
+        console.log("Nowa Wiadomosc")
         const commands = JSON.parse(data.data)
         console.log(commands)
         forward = commands.forward

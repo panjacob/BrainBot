@@ -23,7 +23,7 @@ if __name__ == '__main__':
     mean, std = dc.load_mean_std(mean_std_file_path)
 
     tcp_client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    udp_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #socket.SOCK_DGRAM
+    udp_server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     tcp_client_sock.bind((TCP_IP_ADDRESS, TCP_PORT))
     tcp_client_sock.connect(("localhost", 8888))
@@ -46,8 +46,8 @@ if __name__ == '__main__':
         send_string = "{'left': " + str(left) + ", 'forward': " + str(forward) + "} "
         message_bytes = send_string.encode()
         #result_to_send = struct.pack("I", seq_num) + struct.pack("i", seq_num)
-        udp_server_sock.sendall(message_bytes)
-        #udp_server_sock.sendto(message_bytes, (UDP_IP_ADDRESS, UDP_PORT))
+        #udp_server_sock.sendall(message_bytes)
+        udp_server_sock.sendto(message_bytes, (REMOTE_UDP_ADDRESS, REMOTE_UDP_PORT))
 
         seq_num += 1
         if seq_num == 2 ^ 32:
