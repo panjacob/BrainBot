@@ -142,7 +142,7 @@ class OneDNetScaled(nn.Module):
         # Check if saving for the first time
         if self.saved is False:
             # Current time str - Used to differentiate saved models
-            self.now_str = datetime.now().strftime("%d.%m.%Y_%H:%M")
+            self.now_str = datetime.now().strftime("%d.%m.%Y_%H.%M")
             #Dir Name:
             dir_name = "Train_OneDNetScaled_" + self.now_str
             self.save_dir_path = save_dir_path+'/'+dir_name

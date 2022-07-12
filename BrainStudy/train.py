@@ -1,7 +1,7 @@
 """
 The neural network's training.
 Tensorboard tutorial: https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
-using one of those commands : tensorboard --logdir=Brainstudy/runs or  tensorboard --logdir=runs
+using one of those commands : tensorboard --logdir=BrainStudy/runs or  tensorboard --logdir=runs
 """
 import time
 from brainset import *
@@ -12,7 +12,7 @@ import seaborn as sn
 from sklearn.metrics import roc_auc_score, RocCurveDisplay
 
 load_pickled_data = True
-single_batch_test = True
+single_batch_test = False
 save_model = True
 save_dir_path = "models"
 #os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -186,7 +186,7 @@ def main():
                 print('test loss', (sum(loses) / len(loses)).item())
                 print('test time', time.perf_counter()  - eval_time)
                 if not epoch % 10 and save_model:
-                    save_param = f"E:{epoch}_A:{sum(accuracy) / len(accuracy)}"
+                    save_param = f"E.{epoch}_A.{sum(accuracy) / len(accuracy)}"
                     model.saveModel(save_dir_path,save_param)
                     print("Model Saved")
 

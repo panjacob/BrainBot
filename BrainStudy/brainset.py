@@ -31,24 +31,35 @@ CLASSES = {
 '''
 
 
-def select_train_test_files():
-    #files_idx = list(range(0, 30))
-    #files_idx = random.sample(range(0, 35), size)
-    train_files_idx = list(range(0, 30))
-    train = []
+def selectMentalArithmeticFiles(randomise = False):
+    train_files = []
+    test_files = []
+    max_file_index = 36 #amount of subjects
+    #Select train files (indexes)
+    if randomise:
+        train_percentage = 0.7
+        train_files_idx = random.sample(range(0, max_file_index), math.ceil(max_file_index * train_percentage))
+    else:
+        train_files_idx = list(range(0, 30))
+    #Select test files (complement)
+    test_files_idx =  [t for t in list(range(0, max_file_index)) if t not in train_files_idx]
+
+    def fileIdxString(idx):
+        result = []
+        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
+        result.append("Subject" + az + str(idx) + "_1.edf")
+        result.append("Subject" + az + str(idx) + "_2.edf")
+        return result
+
     for idx in train_files_idx:
-        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
-        train.append("Subject" + az + str(idx) + "_1.edf")
-        train.append("Subject" + az + str(idx) + "_2.edf")
+        train_files.extend(fileIdxString(idx))
 
-    test_files_idx = list(range(5, 10))
-    test = []
     for idx in test_files_idx:
-        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
-        test.append("Subject" + az + str(idx) + "_1.edf")
-        test.append("Subject" + az + str(idx) + "_2.edf")
+        test_files.extend(fileIdxString(idx))
 
-    return train, test
+    return train_files, test_files
+
+
 
 
 def load_data(train_batch_size=8,test_batch_size=2,load_pickled_data=True):
@@ -59,16 +70,6 @@ def load_data(train_batch_size=8,test_batch_size=2,load_pickled_data=True):
     test_loader = DataLoader(brainset_test, batch_size=test_batch_size, shuffle=False)
     return train_loader, test_loader
 
-
-def select_train_files():
-    train_percentage = 0.7
-    files_idx = random.sample(range(0, 35), math.ceil(35 * train_percentage))
-    result = []
-    for idx in files_idx:
-        az = "0" if idx < 10 else ""  # additional zero to print numbers like this: 00 01 09 and 10 22 34.
-        result.append("Subject" + az + str(idx) + "_1.edf")
-        result.append("Subject" + az + str(idx) + "_2.edf")
-    return result
 
 
 class Brainset(Dataset):
@@ -114,9 +115,7 @@ class Brainset(Dataset):
             files = filter(lambda x: x.endswith(".edf"), files)
             
             # Split files to test and train files:
-            train_files = select_train_files()
-            test_files = [x for x in files if x not in train_files]
-            #train_files, test_files = select_train_test_files()
+            train_files, test_files = selectMentalArithmeticFiles(randomise=False)
             
             # Set dataset files (either test or train)
             files = train_files if is_trainset else test_files
