@@ -105,7 +105,7 @@ def main():
     writer = SummaryWriter()
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = load_data(load_pickled_data=load_pickled_data)
-    #brainloader.dataset.stats()
+    brainloader.dataset.stats()
     print("Data Loaded")
     device = torch.device("cuda")
     model = OneDNetScaled()
@@ -154,7 +154,7 @@ def main():
 
 
         model.eval()
-        if not epoch % 1 and (epoch or single_batch_test):
+        if not epoch % 2 and (epoch or single_batch_test):
             print("Testing")
             eval_time = time.perf_counter()
             accuracy = []
