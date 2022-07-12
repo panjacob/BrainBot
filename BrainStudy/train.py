@@ -1,7 +1,7 @@
 """
 The neural network's training.
 Tensorboard tutorial: https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
-using command : tensorboard --logdir=Brainstudy/runs
+using one of those commands : tensorboard --logdir=Brainstudy/runs or  tensorboard --logdir=runs
 """
 import time
 from brainset import *
@@ -9,9 +9,10 @@ from model import *
 from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
 import seaborn as sn
+from sklearn.metrics import roc_auc_score, RocCurveDisplay
 
-load_pickled_data = False
-single_batch_test = False
+load_pickled_data = True
+single_batch_test = True
 save_model = True
 save_dir_path = "models"
 #os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -51,11 +52,51 @@ class BinaryConfusionMatrix:
         df_cm = pd.DataFrame(matrix_list, cols, rows)
         return sn.heatmap(df_cm, annot=True, fmt='d').get_figure()
 
+'''
+def createRocFig(y_true_all, prob_pred_all):
+    roc_auc = roc_auc_score(y_true_all, prob_pred_all, average=None, multi_class='ovr')
+    roc_auc_avg = roc_auc_score(y_true_all, prob_pred_all, average='macro', multi_class='ovr')
+    y_true_binary = [true > 0 for true in y_true_all]
+    y_pred_binary = [pred >= 0.5 for pred in prob_pred_all]
+    rocs = [RocCurveDisplay.from_predictions(y_true_binary[i], y_pred_binary[i]) for i in range(2)]
+    rocs_x = [roc.line_.get_xdata() for roc in rocs]
+    rocs_y = [roc.line_.get_ydata() for roc in rocs]
+    styles = ['-r', '-g', '-b', '-c', '-m', '-y']
+    roc_fig, roc_axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+    roc_axs = roc_axs.flatten()
+    for i in [0, 2, 8]:
+        roc_axs[i].axis('off')
+    class_names = ['Mental','Off']
+    for i in range(2):
+        roc_axs[1].plot(rocs_x[i], rocs_y[i], styles[i], label=f"{class_names[i]} - AUC={roc_auc[i]:.3f}")
+        if i != 0:
+            roc_ax = roc_axs[i + 2]
+            roc_ax.plot(rocs_x[i], rocs_y[i], styles[i], label=f"{class_names[i]} - AUC={roc_auc[i]:.3f}")
+            roc_ax.legend(loc='lower right')
+    roc_axs[1].legend(loc='best', fontsize='x-small')
+    return roc_auc_avg, roc_fig
 
-
-
-
-
+    conf_matrix_heatmap = sn.heatmap(df_cm, annot=True).get_figure()
+    roc_auc = roc_auc_score(y_true_all, prob_pred_all, average=None, multi_class='ovr')
+    roc_auc_avg = roc_auc_score(y_true_all, prob_pred_all, average='macro', multi_class='ovr')
+    y_true_binary = [[true == i for true in y_true_all] for i in range(classes_count)]
+    y_pred_binary = [[probs[i] for probs in prob_pred_all] for i in range(classes_count)]
+    rocs = [RocCurveDisplay.from_predictions(y_true_binary[i], y_pred_binary[i]) for i in range(classes_count)]
+    rocs_x = [roc.line_.get_xdata() for roc in rocs]
+    rocs_y = [roc.line_.get_ydata() for roc in rocs]
+    styles = ['-r', '-g', '-b', '-c', '-m', '-y']
+    roc_fig, roc_axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+    roc_axs = roc_axs.flatten()
+    for i in [0, 2, 8]:
+        roc_axs[i].axis('off')
+    for i in range(classes_count):
+        roc_axs[1].plot(rocs_x[i], rocs_y[i], styles[i], label=f"{class_names[i]} - AUC={roc_auc[i]:.3f}")
+        if i != 0:
+            roc_ax = roc_axs[i + 2]
+            roc_ax.plot(rocs_x[i], rocs_y[i], styles[i], label=f"{class_names[i]} - AUC={roc_auc[i]:.3f}")
+            roc_ax.legend(loc='lower right')
+    roc_axs[1].legend(loc='best', fontsize='x-small')
+'''
 
 def main():
     # Measure training time
@@ -64,7 +105,7 @@ def main():
     writer = SummaryWriter()
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = load_data(load_pickled_data=load_pickled_data)
-    brainloader.dataset.stats()
+    #brainloader.dataset.stats()
     print("Data Loaded")
     device = torch.device("cuda")
     model = OneDNetScaled()
@@ -119,6 +160,8 @@ def main():
             accuracy = []
             loses = []
             conf_matrix = BinaryConfusionMatrix()
+            labels_list = []
+            outputs_list = []
             model.eval()
             with torch.no_grad():
                 for inputs, labels, filenames in testloader:
@@ -130,9 +173,15 @@ def main():
                     accuracy.append(acc.item())
                     loses.append(loss)
                     conf_matrix.append(labels,outputs)
+                    labels_list.extend(labels.cpu())
+                    outputs_list.extend(outputs.cpu())
                 writer.add_scalar("Loss/test", (sum(loses) / len(loses)).item(), epoch)
                 writer.add_scalar("Accuracy/test", sum(accuracy) / len(accuracy), epoch)
-                writer.add_figure("ConfusionMatrix/test", conf_matrix.writeToTensorboard(), 0)
+                writer.add_figure("ConfusionMatrix/test", conf_matrix.writeToTensorboard(), epoch)
+                #roc_auc_avg, roc_fig = createRocFig(labels_list, outputs_list)
+                #writer.add_scalar("Average AUC-ROC", roc_auc_avg, epoch)
+                #writer.add_figure("ROC", roc_fig, epoch)
+                plt.close('all')
                 print('test accuracy', sum(accuracy) / len(accuracy))
                 print('test loss', (sum(loses) / len(loses)).item())
                 print('test time', time.perf_counter()  - eval_time)
