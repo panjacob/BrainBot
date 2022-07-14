@@ -25,29 +25,32 @@ if __name__ == '__main__':
     tcp_client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     udp_server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    tcp_client_sock.bind((TCP_IP_ADDRESS, TCP_PORT))
-    tcp_client_sock.connect(("localhost", 8888))
+    tcp_client_sock.bind(("localhost", TCP_LOCAL_PORT))
+    tcp_client_sock.connect((TCP_AV_ADDRESS, TCP_AV_PORT))
     udp_server_sock.bind((UDP_IP_ADDRESS, UDP_PORT))
     udp_server_sock.connect((UDP_IP_ADDRESS, UDP_PORT))
 
     buffer = np.zeros((dc.CHANNELS_COUNT, dc.SPLIT_LENGTH))
 
+    filters = dc.initialize_filters()
+
     while True:
         data = tcp_client_sock.recv(communication_parameters.words * 3)
         rawData = struct.unpack(str(communication_parameters.words * 3) + 'B', data)
         decoded_data = dc.decode_data_from_bytes(rawData)  # [channels, samples]
-        prepared_data = dc.prepare_data_for_classification(decoded_data, mean, std)
+        triggery = np.bitwise_and(decoded_data[16, :].astype(int), 2 ** 17 - 1)
+        normalized_data = dc.normalize_to_reference(decoded_data, 14)
+        prepared_data = dc.prepare_data_for_classification(normalized_data, mean, std, filters)
         buffer = np.roll(buffer, -dc.SPLIT_PADING, axis=1)
-        buffer[:, -dc.SPLIT_PADING:] = prepared_data
-
+        buffer[:, -SAMPLES_DECIMATED:] = prepared_data
         label = dc.get_classification(buffer, lda, clf)
+        print(label)
         left = True if label == 1 else False
         forward = True
-        send_string = "{'left': " + str(left) + ", 'forward': " + str(forward) + "} "
+        send_string = '{"left": ' + str(left).lower() + ', "forward": ' + str(forward).lower() + "} "
         message_bytes = send_string.encode()
-        #result_to_send = struct.pack("I", seq_num) + struct.pack("i", seq_num)
-        #udp_server_sock.sendall(message_bytes)
-        udp_server_sock.sendto(message_bytes, (REMOTE_UDP_ADDRESS, REMOTE_UDP_PORT))
+        result_to_send = struct.pack("I", seq_num) + message_bytes
+        udp_server_sock.sendto(result_to_send, (REMOTE_UDP_ADDRESS, REMOTE_UDP_PORT))
 
         seq_num += 1
         if seq_num == 2 ^ 32:
