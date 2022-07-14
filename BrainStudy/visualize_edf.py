@@ -30,11 +30,11 @@ def PSD(data_filtered):
         plt.plot(freqs, psds_welch_mean[i], label='A%s' % i)
         print(freqs)
     plt.legend()
-    plt.savefig(os.path.join('BrainStudy', 'data/plots/s1_2'))
+    #plt.savefig(os.path.join('BrainStudy', 'data/raw/Data1Chiil.bdf'))
     plt.show()
 
 if __name__ == '__main__':
-    file = os.path.join('BrainStudy/data/raw', 'Data1Chiil.bdf') #
+    file = os.path.join('BrainStudy/data/raw', 'Data2ChiilEyesClosed.bdf') #
     #file = os.path.join('BrainStudy/data/raw1', 'Subject01_2.edf')
     data = mne.io.read_raw_bdf(file)
     data_filtered = filter_data(data)
@@ -45,4 +45,4 @@ if __name__ == '__main__':
     #PSD(data_filtered)
     print(data)
     print(data.info)
-    data.plot(n_channels=1, highpass=0.5, lowpass=45, theme="light", block=True, color=dict(eeg='blue'))
+    #data.plot(n_channels=16, highpass=0.5, lowpass=45, theme="light", block=True, color=dict(eeg='blue'))

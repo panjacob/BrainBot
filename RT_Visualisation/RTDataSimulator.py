@@ -15,7 +15,7 @@ if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_ADDRESS_SIMULATOR, UDP_PORT_SIMULATOR))
 
-    file = os.path.join('BrainStudy/data/raw', 'Data2ChiilEyesClosed.bdf')
+    file = os.path.join('BrainStudy/data/raw', 'Data1Chiil.bdf')
     data = mne.io.read_raw_bdf(file)
     data = filter_data(data)
     raw_data = data.get_data()
