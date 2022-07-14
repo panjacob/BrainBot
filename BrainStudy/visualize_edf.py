@@ -34,15 +34,15 @@ def PSD(data_filtered):
     plt.show()
 
 if __name__ == '__main__':
-    #file = os.path.join('BrainStudy/data/raw', 'Data1Chiil.bdf') #
-    file = os.path.join('BrainStudy/data/raw1', 'Subject01_2.edf')
-    data = mne.io.read_raw_edf(file)
+    file = os.path.join('BrainStudy/data/raw', 'Data1Chiil.bdf') #
+    #file = os.path.join('BrainStudy/data/raw1', 'Subject01_2.edf')
+    data = mne.io.read_raw_bdf(file)
     data_filtered = filter_data(data)
     #raw_data = data.get_data()
     #info = data.info
     #print(info)
     #channels = data.ch_names
-    PSD(data_filtered)
+    #PSD(data_filtered)
     print(data)
     print(data.info)
-    #data.plot(n_channels=16, highpass=0.5, lowpass=45, theme="light", block=True, color=dict(eeg='blue'))
+    data.plot(n_channels=1, highpass=0.5, lowpass=45, theme="light", block=True, color=dict(eeg='blue'))
