@@ -1,7 +1,6 @@
 import pywt
 import numpy as np
 import pickle
-from scipy.signal import decimate
 from BrainStudy.signal_parameters import *
 from communication_parameters import *
 from scipy.signal import lfilter, butter, buttord
@@ -63,17 +62,16 @@ def initialize_filters():
 
 
 def normalize_to_reference(decoded_data, ref_channel):
-        return decoded_data - np.tile(decoded_data[ref_channel, :], (channels, 1))
+        return decoded_data - np.tile(decoded_data[ref_channel, :], (channels-1, 1))
 
 
-def prepare_data_for_classification(decoded_data, mean, std, eeg_filters):
-    decimated_signal = np.apply_along_axis(decimate, 1, decoded_data, DECIMATION_FACTOR)  # Accounts for different freqs
+def prepare_data_for_classification(buffer, mean, std, eeg_filters):
     mean_vec = mean[:, 0]
     std_vec = std[:, 0]
-    mean = np.tile(mean_vec, (SAMPLES_DECIMATED, 1)).T
-    std = np.tile(std_vec, (SAMPLES_DECIMATED, 1)).T
+    mean = np.tile(mean_vec, (SPLIT_LENGTH + BUFFER_PADDING, 1)).T
+    std = np.tile(std_vec, (SPLIT_LENGTH + BUFFER_PADDING, 1)).T
 
-    low_filtered = lfilter(eeg_filters["b_low"], eeg_filters["a_low"], decimated_signal)
+    low_filtered = lfilter(eeg_filters["b_low"], eeg_filters["a_low"], buffer)
     filtered = lfilter(eeg_filters["b_high"], eeg_filters["a_high"], low_filtered)
 
     filtered -= mean

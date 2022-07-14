@@ -6,6 +6,7 @@ import sys
 import pickle
 import data_converter as dc
 import numpy as np
+from scipy.signal import decimate
 from communication_parameters import *
 
 
@@ -30,20 +31,23 @@ if __name__ == '__main__':
     udp_server_sock.bind((UDP_IP_ADDRESS, UDP_PORT))
     udp_server_sock.connect((UDP_IP_ADDRESS, UDP_PORT))
 
-    buffer = np.zeros((dc.CHANNELS_COUNT, dc.SPLIT_LENGTH))
+    buffer = np.zeros((dc.CHANNELS_COUNT, dc.SPLIT_LENGTH + dc.BUFFER_PADDING))
 
     filters = dc.initialize_filters()
 
     while True:
         data = tcp_client_sock.recv(communication_parameters.words * 3)
         rawData = struct.unpack(str(communication_parameters.words * 3) + 'B', data)
-        decoded_data = dc.decode_data_from_bytes(rawData)  # [channels, samples]
-        triggery = np.bitwise_and(decoded_data[16, :].astype(int), 2 ** 17 - 1)
-        normalized_data = dc.normalize_to_reference(decoded_data, 14)
-        prepared_data = dc.prepare_data_for_classification(normalized_data, mean, std, filters)
+        decoded_data = dc.decode_data_from_bytes(rawData) # [channels, samples]
+        # triggers = np.bitwise_and(decoded_data[16, :].astype(int), 2 ** 17 - 1)
+        #normalized_data = dc.normalize_to_reference(decoded_data[:channels-1, :] , 14)
+        normalized_data = decoded_data[:channels-1, :]
+        decimated_signal = np.apply_along_axis(decimate, 1, normalized_data, DECIMATION_FACTOR)  # Accounts for different freqs
         buffer = np.roll(buffer, -dc.SPLIT_PADING, axis=1)
-        buffer[:, -SAMPLES_DECIMATED:] = prepared_data
-        label = dc.get_classification(buffer, lda, clf)
+        buffer[:, -SAMPLES_DECIMATED:] = decimated_signal
+        buffer_no_padding = dc.prepare_data_for_classification(buffer, mean, std, filters)
+        buffer_no_padding = buffer_no_padding[:, dc.BUFFER_PADDING:]
+        label = dc.get_classification(buffer_no_padding, lda, clf)
         print(label)
         left = True if label == 1 else False
         forward = True
