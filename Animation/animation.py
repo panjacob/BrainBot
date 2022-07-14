@@ -8,10 +8,9 @@ from communication_parameters import *
 udpClient_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udpClient_sock.bind((UDP_ADDRESS, UDP_PORT))
 
-
 WIDTH = 1200
 HEIGHT = 1200
-xVelocity = 5
+xVelocity = 10
 
 window = Tk()
 
@@ -30,11 +29,12 @@ while True:
     result = data.decode("utf-8")
     result_dict = json.loads(result)
     coordinates = canvas.coords(my_image)
-    if(coordinates[0] < WIDTH and coordinates[0] > 0):
-        if (result_dict['left'] == True):
-            canvas.move(my_image, -xVelocity, 0)
-        else:
-            canvas.move(my_image, xVelocity, 0)
+    if not coordinates[0] <= 10 and not coordinates[0] >= WIDTH - 10:
+        if(coordinates[0] < WIDTH and coordinates[0] > 0):
+            if (result_dict['left'] == True):
+                canvas.move(my_image, -xVelocity, 0)
+            else:
+                canvas.move(my_image, xVelocity, 0)
     window.update()
     time.sleep(0.01)
 

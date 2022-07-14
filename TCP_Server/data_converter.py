@@ -1,10 +1,12 @@
 import pywt
 import numpy as np
 import pickle
+import datetime
 from BrainStudy.signal_parameters import *
 from communication_parameters import *
 from scipy.signal import lfilter, butter, buttord
-
+from scipy import fft
+import matplotlib.pyplot as plt
 
 def eeg_signal_to_dwt(data):
     c_allchannels = np.empty(0)
@@ -65,7 +67,7 @@ def normalize_to_reference(decoded_data, ref_channel):
         return decoded_data - np.tile(decoded_data[ref_channel, :], (channels-1, 1))
 
 
-def prepare_data_for_classification(buffer, mean, std, eeg_filters):
+def prepare_data_for_classification(buffer, mean, std, eeg_filters, cnt):
     mean_vec = mean[:, 0]
     std_vec = std[:, 0]
     mean = np.tile(mean_vec, (SPLIT_LENGTH + BUFFER_PADDING, 1)).T
@@ -74,10 +76,31 @@ def prepare_data_for_classification(buffer, mean, std, eeg_filters):
     low_filtered = lfilter(eeg_filters["b_low"], eeg_filters["a_low"], buffer)
     filtered = lfilter(eeg_filters["b_high"], eeg_filters["a_high"], low_filtered)
 
-    filtered -= mean
-    filtered /= std
 
-    return filtered
+    X = fft.fft(np.average(buffer[:14, :] + buffer[15:, :], 0))
+    N = len(X)
+    n = np.arange(N)
+    T = N / DATASET_FREQ
+    freq = n / T
+
+    alpha = np.sum(np.abs(X[np.intersect1d(np.where(7 < freq), np.where(freq < 12))]))
+
+    X = fft.fft(np.average(buffer[:14, :] + buffer[15:, :], 0))
+    N = len(X)
+    n = np.arange(N)
+    T = N / DATASET_FREQ
+    freq = n / T
+
+    beta = np.sum(np.abs(X[np.intersect1d(np.where(12 < freq), np.where(freq < 35))]))
+    #print(f"ALPHA/BETA:{alpha / beta}")
+    #print(f"ALPHA:{alpha}")
+    #print(f"BETA:{beta}")
+    return alpha / beta
+
+    #filtered -= mean
+    #filtered /= std
+
+
 
 
 def get_classification(buffer, lda, clf):

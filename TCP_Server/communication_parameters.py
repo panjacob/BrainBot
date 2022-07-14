@@ -6,7 +6,7 @@ words = channels * samples
 
 SAMPLES_DECIMATED = samples // DECIMATION_FACTOR
 
-TCP_LOCAL_PORT = 7774
+TCP_LOCAL_PORT = 7772
 
 TCP_AV_PORT = 8888 # port configured in Activeview
 TCP_AV_ADDRESS = 'localhost'  # IP adress of Actiview host
