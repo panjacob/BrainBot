@@ -12,7 +12,7 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 from scipy.signal import lfilter, butter, buttord
-from scipy import fft
+from scipy import fft, fftpack
 from torch.utils.data import Dataset, DataLoader
 from signal_parameters import *
 from brainset_parameters import *
@@ -92,18 +92,18 @@ class Brainset(Dataset):
             ord, wn = buttord(HIGH_PASS_FREQ_PB , HIGH_PASS_FREQ_SB, MAX_LOSS_PB, MIN_ATT_SB, False, DATASET_FREQ)
             self.filter["b_high"], self.filter["a_high"] = butter(ord, wn, 'highpass', False, 'ba', DATASET_FREQ)
 
-            #t = np.linspace(0, 1, 2000, False)  # 1 second
-            #sig = np.sin(2 * np.pi * 10 * t) + np.sin(2 * np.pi * 85 * t)
-            #fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-            #ax1.plot(t, sig)
-            #ax1.set_title('10 Hz and 20 Hz sinusoids')
-            #ax1.axis([0, 1, -2, 2])
-            #filtered = self.__filter(sig)
-            #ax2.plot(t, filtered)
-            #ax2.set_title('After 15 Hz high-pass filter')
-            #ax2.axis([0, 1, -2, 2])
-            #ax2.set_xlabel('Time [seconds]')
-            #plt.tight_layout()
+            t = np.linspace(0, 0.500, 250, False)  # 1 second
+            sig = np.sin(2 * np.pi * 10 * t) + np.sin(2 * np.pi * 85 * t)
+            fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+            ax1.plot(t[50:], sig[50:])
+            ax1.set_title('10 Hz and 20 Hz sinusoids')
+            ax1.axis([0, 1, -2, 2])
+            filtered = self.__filter(sig)
+            ax2.plot(t[50:], filtered[50:])
+            ax2.set_title('After 15 Hz high-pass filter')
+            ax2.axis([0, 1, -2, 2])
+            ax2.set_xlabel('Time [seconds]')
+            plt.tight_layout()
             #plt.show()
 
         if not load_pickled:
@@ -142,19 +142,19 @@ class Brainset(Dataset):
                 else:
                     y_filtered = y_unordered
 
-                ica_transformer = FastICA(16, whiten='unit-variance', max_iter=10000)
-                after_ica = ica_transformer.fit_transform(y_filtered[:, 13000:26000].T).T
+                #ica_transformer = FastICA(16, whiten='unit-variance', max_iter=10000)
+                #after_ica = ica_transformer.fit_transform(y_filtered[:, 13000:26000].T).T
 
-                fig, axs = plt.subplots(16)
-                for i, ax in enumerate(axs):
-                    ax.plot(after_ica[i, :])
-                plt.show()
+                #fig, axs = plt.subplots(16)
+                #for i, ax in enumerate(axs):
+                #    ax.plot(after_ica[i, :])
+                #plt.show()
 
-                X = fft.fft(y_filtered.flatten())
-                N = len(X)
-                n = np.arange(N)
-                T = N / DATASET_FREQ
-                freq = n / T
+                X = fft.fft(y_filtered[0, :])
+                freq = fftpack.fftfreq(len(X), 1 / DATASET_FREQ)
+
+                freq = freq[np.where(freq >= 0)]
+                X = X[:len(freq)]
 
                 plt.figure(figsize=(12, 6))
                 plt.subplot(121)
@@ -164,7 +164,7 @@ class Brainset(Dataset):
                 plt.ylabel('FFT Amplitude |X(freq)|')
                 plt.xlim(0, 100)
 
-                plt.show()
+                plt.savefig("furier.png")
 
                 # Pick and order channels like in our Biosemi EEG
                 y = self.__order_channels(y_filtered)
