@@ -9,9 +9,10 @@ from model import *
 from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
 import seaborn as sn
+from torch.optim import lr_scheduler
 from sklearn.metrics import roc_auc_score, RocCurveDisplay
 
-load_pickled_data = True
+load_pickled_data = False
 single_batch_test = False
 save_model = True
 save_dir_path = "models"
@@ -98,6 +99,7 @@ def createRocFig(y_true_all, prob_pred_all):
     roc_axs[1].legend(loc='best', fontsize='x-small')
 '''
 
+
 def main():
     # Measure training time
     start_time = time.perf_counter()
@@ -106,11 +108,13 @@ def main():
     torch.set_default_dtype(torch.float32)
     brainloader, testloader = load_data(load_pickled_data=load_pickled_data)
     brainloader.dataset.stats()
+    testloader.dataset.stats()
     print("Data Loaded")
     device = torch.device("cuda")
     model = OneDNetScaled()
     criterion = nn.BCELoss()  # binary cross entropy
     optimalizer = torch.optim.Adam(model.parameters(), lr=0.000005)
+    scheduler = lr_scheduler.MultiStepLR(optimalizer,milestones=[20,50,100,200,500],gamma=0.7)
     model.to(device)
 
     if single_batch_test is True:
@@ -151,10 +155,13 @@ def main():
         print('accuracy', sum(train_accuracy) / len(train_accuracy))
         print('loss', (sum(train_loses) / len(train_loses)).item())
         print('time',time.perf_counter()-epoch_time)
+        print('learning rate',scheduler.get_last_lr().pop())
+        # Stepping scheduler
+        scheduler.step()
 
 
         model.eval()
-        if not epoch % 2 and (epoch or single_batch_test):
+        if not epoch % 1 and (epoch or single_batch_test):
             print("Testing")
             eval_time = time.perf_counter()
             accuracy = []

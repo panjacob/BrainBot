@@ -35,14 +35,15 @@ def selectMentalArithmeticFiles(randomise = False):
     train_files = []
     test_files = []
     max_file_index = 36 #amount of subjects
-    #Select train files (indexes)
+    #Select test files (indexes)
     if randomise:
-        train_percentage = 0.7
-        train_files_idx = random.sample(range(0, max_file_index), math.ceil(max_file_index * train_percentage))
+        test_percentage = 0.3
+        test_files_idx = random.sample(range(0, max_file_index), math.ceil(max_file_index * test_percentage))
     else:
-        train_files_idx = list(range(0, 30))
-    #Select test files (complement)
-    test_files_idx =  [t for t in list(range(0, max_file_index)) if t not in train_files_idx]
+        #test_files_idx = list(range(30, 36))
+        test_files_idx = [17, 7, 12, 28, 22, 29, 2, 18, 30, 19, 1]
+    #Select train files (complement)
+    train_files_idx =  [t for t in list(range(0, max_file_index)) if t not in test_files_idx]
 
     def fileIdxString(idx):
         result = []
@@ -62,10 +63,10 @@ def selectMentalArithmeticFiles(randomise = False):
 
 
 
-def load_data(train_batch_size=8,test_batch_size=2,load_pickled_data=True):
+def load_data(train_batch_size=8,test_batch_size=2,load_pickled_data=True, use_filter=False):
     path = os.path.join(DATA_PATH)
-    brainset_train = Brainset(path, is_trainset=True, load_pickled=load_pickled_data)
-    brainset_test = Brainset(path, is_trainset=False, load_pickled=load_pickled_data)
+    brainset_train = Brainset(path, is_trainset=True, load_pickled=load_pickled_data, use_filter=use_filter)
+    brainset_test = Brainset(path, is_trainset=False, load_pickled=load_pickled_data, use_filter=use_filter)
     train_loader = DataLoader(brainset_train, batch_size=train_batch_size, shuffle=True)
     test_loader = DataLoader(brainset_test, batch_size=test_batch_size, shuffle=False)
     return train_loader, test_loader
